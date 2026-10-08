@@ -1,4 +1,6 @@
 # CaféFlow Backend
+EXCEL CAFEFLOW-PLATILLA-SCRUM
+https://docs.google.com/spreadsheets/d/1uLeyWFG8C-NzjGinBdygrRYZwfu34rs6/edit?usp=sharing&ouid=103795475046358659572&rtpof=true&sd=true
 
 Backend de CaféFlow construido con Node.js y Express, organizado para separar la
 configuración, las rutas y la lógica de la aplicación.
