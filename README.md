@@ -73,3 +73,8 @@ La respuesta esperada es:
 ```
 
 El puerto es `3000` por defecto; si defines `PORT`, utiliza ese puerto en la URL.
+
+## Pruebas y rendimiento
+
+- Integración y limitaciones actuales: [`tests/integration/README.md`](./tests/integration/README.md).
+- Planes de carga/estrés JMeter: [`performance/jmeter/README.md`](./performance/jmeter/README.md).
