@@ -1,4 +1,5 @@
 # CaféFlow Backend
+
 EXCEL CAFEFLOW-PLATILLA-SCRUM
 https://docs.google.com/spreadsheets/d/1uLeyWFG8C-NzjGinBdygrRYZwfu34rs6/edit?usp=sharing&ouid=103795475046358659572&rtpof=true&sd=true
 
@@ -24,11 +25,10 @@ npm install
    los marcadores de usuario, contraseña y cluster por los valores de Atlas.
 6. Copia el archivo de ejemplo a `.env` desde la raíz del proyecto:
 
-   ```bash
-   cp .env.example .env
+   ```powershell
+   Copy-Item .env.example .env
    ```
 
-   En Windows PowerShell, usa `Copy-Item .env.example .env`.
 7. Abre `.env` localmente y reemplaza el valor de `MONGODB_URI` con la URI
    obtenida en Atlas. No compartas ese archivo: contiene credenciales.
 
@@ -62,8 +62,7 @@ La API incluye una ruta de prueba para confirmar que el servicio responde:
 - **Autenticación:** ninguna
 
 En Postman, selecciona GET, pega la URL y envía la solicitud sin body ni
-autenticación. Se espera una respuesta HTTP 200 con el estado de la API.
-La respuesta esperada es:
+autenticación. Se espera una respuesta HTTP 200 con el estado de la API:
 
 ```json
 {
@@ -126,7 +125,8 @@ no incluye la contraseña ni su hash.
 
 ### Perfil y permisos
 
-- `GET /api/usuarios/me`: requiere `Authorization: Bearer <access_token>`.
+- `GET /api/usuarios/me`: requiere el encabezado `Authorization` con un token
+  Bearer válido y devuelve el perfil del usuario autenticado.
 - `GET /api/usuarios`: requiere un token válido de un usuario `admin`; devuelve
   únicamente `id`, `nombre`, `email` y `rol` de cada usuario.
 - La ruta pública de salud no requiere autenticación.
@@ -157,3 +157,8 @@ aceptada por jsonwebtoken (por ejemplo, `15m` o `1h`) y usa `1h` si no se define
 3. Busca esa cuenta por su email y cambia únicamente su campo `rol` a `admin`.
    Haz esta operación solo como administrador de la base de datos; no habilites
    la asignación pública de roles ni guardes credenciales en el repositorio.
+
+## Pruebas y rendimiento
+
+- Integración, configuración y limitaciones: [`tests/integration/README.md`](./tests/integration/README.md).
+- Planes de carga/estrés JMeter, ejecución y reporte: [`performance/jmeter/README.md`](./performance/jmeter/README.md).
