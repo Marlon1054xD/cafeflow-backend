@@ -1,0 +1,225 @@
+{
+  "info": {
+    "_postman_id": "d83ca123-94ba-4c5f-9f63-cafeflow-scrum21",
+    "name": "CaféFlow API",
+    "description": "Smoke y flujo de autenticación contra una API CaféFlow en modo test.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:3000" },
+    { "key": "email", "value": "" },
+    { "key": "password", "value": "api-test-password" },
+    { "key": "accessToken", "value": "" },
+    { "key": "userId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health check",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/salud"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('health endpoint responds with 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('health payload reports ok', function () { pm.expect(pm.response.json()).to.eql({ estado: 'ok', mensaje: 'API de CaféFlow funcionando correctamente' }); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Register customer",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set('email', 'newman-' + Date.now() + '-' + Math.random().toString(16).slice(2) + '@example.test');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('registration creates a customer', function () { pm.response.to.have.status(201); });",
+              "const user = pm.response.json().user;",
+              "pm.test('registration returns safe public fields', function () { pm.expect(user).to.have.property('id'); pm.expect(user.email).to.eql(pm.collectionVariables.get('email')); pm.expect(user.rol).to.eql('cliente'); pm.expect(user).not.to.have.property('password'); });",
+              "pm.collectionVariables.set('userId', user.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Newman Test User\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"rol\": \"admin\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      }
+    },
+    {
+      "name": "Reject duplicate registration",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Newman Test User\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('duplicate email is rejected', function () { pm.response.to.have.status(409); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject invalid registration",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Invalid User\",\n  \"email\": \"invalid-email\",\n  \"password\": \"short\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('invalid registration is rejected', function () { pm.response.to.have.status(400); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject incorrect login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"incorrect-password\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('incorrect credentials are rejected', function () { pm.response.to.have.status(401); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login customer",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('valid credentials return a token', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().access_token).to.be.a('string'); });",
+              "pm.collectionVariables.set('accessToken', pm.response.json().access_token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject unauthenticated profile",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/usuarios/me"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('profile requires authentication', function () { pm.response.to.have.status(401); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get authenticated profile",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": "{{baseUrl}}/api/usuarios/me"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('authenticated profile responds with 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('profile matches the registered customer', function () { pm.expect(pm.response.json().user.id).to.eql(pm.collectionVariables.get('userId')); pm.expect(pm.response.json().user.rol).to.eql('cliente'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject customer access to user list",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": "{{baseUrl}}/api/usuarios"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('customer cannot access user administration', function () { pm.response.to.have.status(403); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

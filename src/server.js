@@ -1,4 +1,15 @@
-require("dotenv").config();
+const {
+  loadEnvironment,
+  validateEnvironment,
+} = require("./config/environment");
+
+try {
+  loadEnvironment();
+  validateEnvironment();
+} catch (error) {
+  console.error(`Configuración inválida: ${error.message}`);
+  process.exit(1);
+}
 
 const app = require("./app");
 const connectToDatabase = require("./config/database");
@@ -7,9 +18,16 @@ async function startServer() {
   try {
     await connectToDatabase();
   } catch (error) {
-    if (error.code === "MONGODB_URI_MISSING") {
+    if (
+      error.code === "MONGODB_URI_MISSING" ||
+      error.code === "MONGODB_URI_TEST_MISSING"
+    ) {
+      const variableName =
+        error.code === "MONGODB_URI_TEST_MISSING"
+          ? "MONGODB_URI_TEST"
+          : "MONGODB_URI";
       console.error(
-        "No se pudo iniciar CaféFlow: falta configurar MONGODB_URI en el archivo .env.",
+        `No se pudo iniciar CaféFlow: falta configurar ${variableName}.`,
       );
     } else {
       console.error(
