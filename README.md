@@ -8,8 +8,10 @@ configuración, las rutas y la lógica de la aplicación.
 
 ## Instalación
 
+Usa Node.js 22.x (las dependencias requieren Node.js 20.19.0 o posterior).
+
 ```bash
-npm install
+npm ci
 ```
 
 ## Configurar MongoDB Atlas
@@ -23,14 +25,16 @@ npm install
 5. En **Database**, selecciona **Connect**, elige **Drivers** y copia la URI de
    conexión. Comprueba que la base de datos de la URI sea `cafeflow` y sustituye
    los marcadores de usuario, contraseña y cluster por los valores de Atlas.
-6. Copia el archivo de ejemplo a `.env` desde la raíz del proyecto:
+6. Copia el ejemplo de desarrollo a `.env.development` desde la raíz del
+   proyecto:
 
    ```powershell
-   Copy-Item .env.example .env
+   Copy-Item .env.development.example .env.development
    ```
 
-7. Abre `.env` localmente y reemplaza el valor de `MONGODB_URI` con la URI
-   obtenida en Atlas. No compartas ese archivo: contiene credenciales.
+7. Abre `.env.development` localmente y reemplaza `MONGODB_URI` con la URI
+   obtenida en Atlas. Define también `JWT_SECRET`. No compartas ese archivo:
+   contiene credenciales.
 
 ## Ejecución
 
@@ -38,11 +42,16 @@ npm install
 npm start
 ```
 
-La aplicación carga las variables de `.env`, conecta a MongoDB y solo entonces
-inicia Express. El servidor escucha en el puerto indicado por `PORT` o, si no
-está definido, en el puerto `3000`. Si `MONGODB_URI` falta o la conexión falla,
-el proceso informa el problema sin mostrar credenciales y termina con un código
-de error, sin iniciar el servidor.
+La aplicación carga `.env.development`, `.env.test` o `.env.production` según
+`NODE_ENV` antes de leer la configuración. Las variables ya definidas en el
+entorno (por ejemplo, las de CI) prevalecen sobre los archivos. Conecta a MongoDB
+y solo entonces inicia Express. El servidor escucha en `PORT` o, si no está
+definido, en el puerto `3000`. Faltantes de configuración se informan por nombre
+de variable, nunca por su valor sensible, y detienen el proceso.
+
+Los archivos `.env` reales están excluidos de Git. Usa
+`.env.development.example`, `.env.test.example` y `.env.production.example` como
+plantillas; no pongas secretos reales en esos ejemplos.
 
 ## Estructura
 
@@ -135,7 +144,8 @@ no incluye la contraseña ni su hash.
 
 ### Configurar JWT
 
-Añade estas variables a tu `.env` local, que no debe subirse al repositorio:
+Añade estas variables a tu `.env.development` local, que no debe subirse al
+repositorio:
 
 ```dotenv
 JWT_SECRET=<secreto-aleatorio-largo>
@@ -162,3 +172,93 @@ aceptada por jsonwebtoken (por ejemplo, `15m` o `1h`) y usa `1h` si no se define
 
 - Integración, configuración y limitaciones: [`tests/integration/README.md`](./tests/integration/README.md).
 - Planes de carga/estrés JMeter, ejecución y reporte: [`performance/jmeter/README.md`](./performance/jmeter/README.md).
+
+## Integración continua (GitHub Actions)
+
+El workflow `.github/workflows/ci.yml` se ejecuta en `pull_request` hacia `main`
+y en `push` a `main`, con Node.js 22.x y un servicio MongoDB 8.0 aislado y
+efímero. Reutiliza la URI exclusiva `MONGODB_URI_TEST` para integración y para
+la API en modo `test`; no requiere secretos de producción ni secretos de
+repositorio.
+
+Para reproducir localmente, inicia una instancia local de MongoDB y configura
+un archivo `.env.test` (puedes partir de `.env.test.example`), o exporta las
+variables en el entorno. En PowerShell:
+
+```powershell
+$env:NODE_ENV = "test"
+$env:MONGODB_URI_TEST = "mongodb://127.0.0.1:27017/cafeflow_test"
+$env:JWT_SECRET = "secreto-local-solo-para-pruebas"
+$env:JWT_EXPIRES_IN = "1h"
+$env:PORT = "3000"
+npm ci
+npm run test:unit
+npm run test:integration -- --coverage --coverageDirectory=coverage/integration
+```
+
+Las pruebas unitarias no requieren MongoDB. Las de integración conectan a
+`MONGODB_URI_TEST`, ejecutan registro, login, perfil y permisos con MongoDB real,
+y eliminan solamente los usuarios que cada ejecución creó. La colección Newman
+crea un usuario con email único que permanece en la base local de pruebas
+porque no existe endpoint público de borrado; CI descarta ese usuario al
+destruir el servicio MongoDB efímero. Usa siempre una base desechable de pruebas.
+
+En otra terminal, inicia la API y espera a que responda antes de ejecutar la
+colección:
+
+```powershell
+$env:NODE_ENV = "test"
+$env:MONGODB_URI_TEST = "mongodb://127.0.0.1:27017/cafeflow_test"
+$env:JWT_SECRET = "secreto-local-solo-para-pruebas"
+$env:JWT_EXPIRES_IN = "1h"
+$env:PORT = "3000"
+node src/server.js
+```
+
+En otra terminal, espera por HTTP con el mismo límite de 60 segundos usado por
+CI:
+
+```powershell
+$deadline = (Get-Date).AddSeconds(60)
+$healthy = $false
+while ((Get-Date) -lt $deadline) {
+  try {
+    $response = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:3000/api/salud" -TimeoutSec 2
+    if ($response.StatusCode -eq 200) { $healthy = $true; break }
+  } catch { }
+  Start-Sleep -Seconds 1
+}
+if (-not $healthy) { throw "La API no respondió dentro de 60 segundos." }
+```
+
+Una vez que el sondeo responda correctamente, ejecuta en esa misma terminal la
+colección versionada `tests/api/cafeflow.postman_collection.json` con Newman:
+
+```powershell
+npm run test:api -- --env-var "baseUrl=http://127.0.0.1:3000" --reporters cli
+```
+
+La salida CLI de Newman es el reporte de la suite y puede guardarse localmente
+con `Tee-Object -FilePath reports/newman.log`. El log de la API queda en la
+terminal donde se inició. No reutilices una base de desarrollo o producción para
+estas pruebas.
+
+Los archivos reales `.env.development`, `.env.test` y `.env.production` no se
+suben a Git. `MONGODB_URI_TEST` es obligatorio y solo se usa con `NODE_ENV=test`;
+la API no cae a `MONGODB_URI` si falta. `MONGODB_URI` y `JWT_SECRET` son
+obligatorios para iniciar la API en desarrollo o producción; `JWT_EXPIRES_IN` y
+`PORT` son opcionales. En CI, la URI y la clave JWT son valores efímeros y
+exclusivos para pruebas, definidos en el workflow, no secretos productivos.
+
+En GitHub, abre **Actions**, el workflow y la ejecución para consultar logs. En
+la página de la ejecución descarga el artefacto `cafeflow-ci-reports` para ver
+cobertura (`coverage/`), el log de inicio (`reports/api.log`) y el resumen de
+Newman (`reports/newman.log`); se publica incluso cuando fallan los pasos de
+prueba. No se conserva el cuerpo de respuestas de login en un reporte JSON.
+
+El pipeline falla ante `npm ci`, una suite fallida o ausente, una URI test
+inválida, un error de conexión, una API que no responda a `/api/salud` dentro de
+60 segundos o una prueba Newman fallida. Newman valida salud, registro, rechazo
+de duplicados y datos inválidos, login correcto e incorrecto, perfil autenticado
+y denegación de acceso de clientes a la lista administrativa. Las suites
+unitarias e integración cubren validaciones y flujos reales contra MongoDB.
