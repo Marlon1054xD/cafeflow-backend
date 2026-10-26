@@ -51,3 +51,25 @@ de error, sin iniciar el servidor.
 - `src/controllers`: manejo de solicitudes y respuestas.
 - `src/services`: lógica de negocio.
 - `src/models`: modelos de datos.
+
+## Endpoint de salud
+
+La API incluye una ruta de prueba para confirmar que el servicio responde:
+
+- **Método:** GET
+- **URL:** `http://localhost:3000/api/salud`
+- **Body:** ninguno
+- **Autenticación:** ninguna
+
+En Postman, selecciona GET, pega la URL y envía la solicitud sin body ni
+autenticación. Se espera una respuesta HTTP 200 con el estado de la API.
+La respuesta esperada es:
+
+```json
+{
+  "estado": "ok",
+  "mensaje": "API de CaféFlow funcionando correctamente"
+}
+```
+
+El puerto es `3000` por defecto; si defines `PORT`, utiliza ese puerto en la URL.
