@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "9927cac2-b73e-4922-a004-8b5a2c6965e2",
     "name": "CafeFlow API",
-    "description": "Casos contractuales pendientes hasta que la API implemente sus rutas. Las solicitudes se mantienen desactivadas para no reportar como aprobados endpoints inexistentes. Los códigos de respuesta marcados por confirmar son expectativas iniciales. El umbral inicial de respuesta es 2000 ms; no es un SLA.",
+    "description": "Pruebas contractuales para las rutas integradas de salud, autenticación y usuarios. Registro, login de cliente y permisos se pueden ejecutar en una base de pruebas aislada. El caso de token vencido queda desactivado porque requiere un JWT expirado firmado con el secreto local de pruebas. El umbral inicial de respuesta es 2000 ms; no es un SLA.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "event": [
@@ -37,15 +37,35 @@
   "item": [
     {
       "name": "Salud",
-      "description": "Pendiente: el proyecto no implementa ni documenta una ruta de salud; no se inventa una URL."
-    },
-    {
-      "name": "Autenticación - contrato de Luis (pendiente de implementación)",
       "item": [
         {
-          "name": "PENDIENTE - Registrar usuario único",
-          "description": "POST /api/auth/register { nombre, email, password }. Caso desactivado porque la ruta aún no existe. Confirma con el equipo el código de éxito esperado (se propone 201).",
-          "disabled": true,
+          "name": "Estado de salud",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/salud"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Salud responde HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Salud informa estado ok', function () { pm.expect(pm.response.json()).to.have.property('estado', 'ok'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Autenticación",
+      "item": [
+        {
+          "name": "Registrar usuario único",
+          "description": "POST /api/auth/register { nombre, email, password }. Crea un cliente con correo único en cada ejecución. Ejecútalo solo contra una base aislada para pruebas.",
           "event": [
             {
               "listen": "prerequest",
@@ -63,8 +83,13 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Registro responde HTTP 201 (por confirmar)', function () { pm.response.to.have.status(201); });",
-                  "pm.test('Registro responde un objeto JSON', function () { pm.expect(pm.response.json()).to.be.an('object'); });"
+                  "pm.test('Registro responde HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Registro devuelve un perfil público sin contraseña', function () {",
+                  "  const user = pm.response.json().user;",
+                  "  pm.expect(user).to.be.an('object');",
+                  "  ['id', 'nombre', 'email', 'rol'].forEach(function (key) { pm.expect(user).to.have.property(key); });",
+                  "  pm.expect(user.rol).to.eql('cliente');",
+                  "});"
                 ]
               }
             }
@@ -81,16 +106,15 @@
           }
         },
         {
-          "name": "PENDIENTE - Registro duplicado",
-          "description": "Requiere ejecutar primero el registro anterior con el mismo email. HTTP 409 es una expectativa inicial por confirmar.",
-          "disabled": true,
+          "name": "Registro duplicado",
+          "description": "Requiere ejecutar primero el registro anterior con el mismo email.",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Duplicado responde HTTP 409 (por confirmar)', function () { pm.response.to.have.status(409); });",
+                  "pm.test('Duplicado responde HTTP 409', function () { pm.response.to.have.status(409); });",
                   "pm.test('Error contiene message', function () { pm.expect(pm.response.json().message).to.be.a('string'); });"
                 ]
               }
@@ -108,16 +132,14 @@
           }
         },
         {
-          "name": "PENDIENTE - Registro con datos inválidos",
-          "description": "El HTTP 400 esperado debe confirmarse con el equipo.",
-          "disabled": true,
+          "name": "Registro con datos inválidos",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Validación responde HTTP 400 (por confirmar)', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Validación responde HTTP 400', function () { pm.response.to.have.status(400); });",
                   "pm.test('Error contiene message', function () { pm.expect(pm.response.json().message).to.be.a('string'); });"
                 ]
               }
@@ -135,16 +157,14 @@
           }
         },
         {
-          "name": "PENDIENTE - Login incorrecto",
-          "description": "El HTTP 401 esperado debe confirmarse con el equipo.",
-          "disabled": true,
+          "name": "Login incorrecto",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Credenciales incorrectas responden HTTP 401 (por confirmar)', function () { pm.response.to.have.status(401); });",
+                  "pm.test('Credenciales incorrectas responden HTTP 401', function () { pm.response.to.have.status(401); });",
                   "pm.test('Error contiene message', function () { pm.expect(pm.response.json().message).to.be.a('string'); });"
                 ]
               }
@@ -162,16 +182,15 @@
           }
         },
         {
-          "name": "PENDIENTE - Login válido",
-          "description": "Contrato acordado: { access_token, user: { id, nombre, email, rol } }, rol cliente o admin. El caso depende de que Luis implemente la ruta y de ejecutar el registro en la misma colección.",
-          "disabled": true,
+          "name": "Login válido",
+          "description": "Contrato integrado: { access_token, user: { id, nombre, email, rol } }. Ejecutar después del registro único para capturar accessToken.",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Login responde HTTP 200 (por confirmar)', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Login responde HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('Login devuelve el contrato acordado y captura access_token', function () {",
                   "  const body = pm.response.json();",
                   "  pm.expect(body.access_token).to.be.a('string').and.not.empty;",
@@ -199,19 +218,18 @@
       ]
     },
     {
-      "name": "Usuarios - perfil propio (pendiente de implementación)",
+      "name": "Usuarios y permisos",
       "item": [
         {
-          "name": "PENDIENTE - GET perfil sin token",
-          "description": "Contrato de Luis: GET /api/usuarios/me. El HTTP 401 esperado es inicial y debe confirmarse.",
-          "disabled": true,
+          "name": "GET perfil sin token",
+          "description": "GET /api/usuarios/me requiere autenticación.",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Sin token responde HTTP 401 (por confirmar)', function () { pm.response.to.have.status(401); });",
+                  "pm.test('Sin token responde HTTP 401', function () { pm.response.to.have.status(401); });",
                   "pm.test('Error contiene message', function () { pm.expect(pm.response.json().message).to.be.a('string'); });"
                 ]
               }
@@ -220,15 +238,14 @@
           "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/usuarios/me" }
         },
         {
-          "name": "PENDIENTE - GET perfil con token inválido",
-          "disabled": true,
+          "name": "GET perfil con token inválido",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Token inválido responde HTTP 401 (por confirmar)', function () { pm.response.to.have.status(401); });",
+                  "pm.test('Token inválido responde HTTP 401', function () { pm.response.to.have.status(401); });",
                   "pm.test('Error contiene message', function () { pm.expect(pm.response.json().message).to.be.a('string'); });"
                 ]
               }
@@ -242,7 +259,7 @@
         },
         {
           "name": "PENDIENTE - GET perfil con token vencido",
-          "description": "No se genera un JWT falso: se requiere proporcionar expiredToken de pruebas firmado y vencido una vez que la API de Luis permita generarlo. El HTTP 401 debe confirmarse.",
+          "description": "Requiere ingresar expiredToken firmado y expirado con el JWT_SECRET de un ambiente local aislado. No se genera un JWT falso ni se usan secretos reales.",
           "disabled": true,
           "event": [
             {
@@ -250,7 +267,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Token vencido responde HTTP 401 (por confirmar)', function () { pm.response.to.have.status(401); });",
+                  "pm.test('Token vencido responde HTTP 401', function () { pm.response.to.have.status(401); });",
                   "pm.test('Error contiene message', function () { pm.expect(pm.response.json().message).to.be.a('string'); });"
                 ]
               }
@@ -263,16 +280,15 @@
           }
         },
         {
-          "name": "PENDIENTE - GET perfil con token válido",
-          "description": "Depende del login válido anterior. El HTTP 200 es una expectativa inicial.",
-          "disabled": true,
+          "name": "GET perfil con token válido",
+          "description": "Depende del login válido anterior, que guarda accessToken.",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Perfil responde HTTP 200 (por confirmar)', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Perfil responde HTTP 200', function () { pm.response.to.have.status(200); });",
                   "pm.test('Perfil devuelve un objeto JSON', function () { pm.expect(pm.response.json()).to.be.an('object'); });"
                 ]
               }
@@ -283,12 +299,38 @@
             "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
             "url": "{{baseUrl}}/api/usuarios/me"
           }
+        },
+        {
+          "name": "GET lista de usuarios con rol cliente",
+          "description": "El token de registro/login es de rol cliente; esta ruta requiere admin y debe responder 403.",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cliente sin permisos responde HTTP 403', function () { pm.response.to.have.status(403); });",
+                  "pm.test('Error contiene message', function () { pm.expect(pm.response.json().message).to.be.a('string'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/usuarios"
+          }
         }
       ]
     },
     {
-      "name": "Permisos y módulos (pendiente)",
-      "description": "No hay endpoints ni reglas de autorización implementados en el repositorio para probar permisos insuficientes o módulos adicionales. No se inventan rutas."
+      "name": "Módulos",
+      "description": "No hay otros módulos funcionales documentados en el proyecto."
     }
   ]
 }
