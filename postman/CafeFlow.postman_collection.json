@@ -1,0 +1,354 @@
+{
+  "info": {
+    "_postman_id": "d83ca123-94ba-4c5f-9f63-cafeflow-scrum17-19",
+    "name": "CaféFlow API",
+    "description": "Pruebas contractuales de salud, autenticación y usuarios. Valida respuestas JSON, privacidad y tiempos; 2000 ms es un umbral inicial del proyecto, no un SLA.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('response time is within maxResponseTimeMs', function () {",
+          "  const limit = Number(pm.environment.get('maxResponseTimeMs'));",
+          "  pm.expect(limit).to.be.a('number').and.greaterThan(0);",
+          "  pm.expect(pm.response.responseTime).to.be.at.most(limit);",
+          "});",
+          "pm.test('response is JSON and exposes no password or hash data', function () {",
+          "  pm.expect(pm.response.headers.get('Content-Type') || '').to.include('application/json');",
+          "  const body = pm.response.json();",
+          "  function inspect(value) {",
+          "    if (Array.isArray(value)) return value.forEach(inspect);",
+          "    if (value && typeof value === 'object') Object.keys(value).forEach(function (key) {",
+          "      pm.expect(key).not.to.match(/password|hash|digest/i);",
+          "      inspect(value[key]);",
+          "    });",
+          "  }",
+          "  inspect(body);",
+          "  const password = pm.environment.get('password');",
+          "  if (password) pm.expect(pm.response.text()).not.to.include(password);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:3000" },
+    { "key": "email", "value": "" },
+    { "key": "nombre", "value": "Postman API Test" },
+    { "key": "password", "value": "api-test-password" },
+    { "key": "invalidToken", "value": "invalid-token" },
+    { "key": "accessToken", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "maxResponseTimeMs", "value": "2000" }
+  ],
+  "item": [
+    {
+      "name": "Salud",
+      "item": [
+        {
+          "name": "Consultar estado de la API",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/salud"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('health responds with HTTP 200 and the expected JSON shape', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('estado', 'mensaje');",
+                  "  pm.expect(body.estado).to.be.a('string').and.eql('ok');",
+                  "  pm.expect(body.mensaje).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Autenticación",
+      "item": [
+        {
+          "name": "Registrar cliente",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const uniqueEmail = 'cafeflow-newman-' + Date.now() + '-' + Math.random().toString(16).slice(2) + '@example.test';",
+                  "pm.environment.set('email', uniqueEmail);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('registration responds with HTTP 201 and a public customer profile', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('user');",
+                  "  pm.expect(body.user).to.have.all.keys('id', 'nombre', 'email', 'rol');",
+                  "  pm.expect(body.user.id).to.be.a('string').and.not.empty;",
+                  "  pm.expect(body.user.nombre).to.be.a('string').and.eql(pm.environment.get('nombre'));",
+                  "  pm.expect(body.user.email).to.be.a('string').and.eql(pm.environment.get('email'));",
+                  "  pm.expect(body.user.rol).to.be.a('string').and.eql('cliente');",
+                  "  pm.environment.set('userId', body.user.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"{{nombre}}\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"rol\": \"admin\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          }
+        },
+        {
+          "name": "Rechazar email duplicado",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"{{nombre}}\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('duplicate registration responds with HTTP 409 and a message', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('message');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar datos de registro inválidos",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"{{nombre}}\",\n  \"email\": \"correo-invalido\",\n  \"password\": \"corta\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('invalid registration responds with HTTP 400 and a message', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('message');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar credenciales incorrectas",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"incorrect-password\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('incorrect credentials respond with HTTP 401 and a message', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('message');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Iniciar sesión como cliente",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('login responds with HTTP 200, access_token and public user fields', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('access_token', 'user');",
+                  "  pm.expect(body.access_token).to.be.a('string').and.not.empty;",
+                  "  pm.expect(body.user).to.have.all.keys('id', 'nombre', 'email', 'rol');",
+                  "  pm.expect(body.user.id).to.be.a('string').and.eql(pm.environment.get('userId'));",
+                  "  pm.expect(body.user.nombre).to.be.a('string');",
+                  "  pm.expect(body.user.email).to.be.a('string').and.eql(pm.environment.get('email'));",
+                  "  pm.expect(body.user.rol).to.be.a('string').and.eql('cliente');",
+                  "  pm.environment.set('accessToken', body.access_token);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Usuarios",
+      "item": [
+        {
+          "name": "Rechazar perfil sin token",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/usuarios/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('profile without a token responds with HTTP 401 and a message', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('message');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar perfil con token inválido",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{invalidToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/usuarios/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('profile with an invalid token responds with HTTP 401 and a message', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('message');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar perfil autenticado",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/usuarios/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('authenticated profile responds with HTTP 200 and public user fields', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('user');",
+                  "  pm.expect(body.user).to.have.all.keys('id', 'nombre', 'email', 'rol');",
+                  "  pm.expect(body.user.id).to.be.a('string').and.eql(pm.environment.get('userId'));",
+                  "  pm.expect(body.user.nombre).to.be.a('string');",
+                  "  pm.expect(body.user.email).to.be.a('string').and.eql(pm.environment.get('email'));",
+                  "  pm.expect(body.user.rol).to.be.a('string').and.eql('cliente');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Denegar lista de usuarios a cliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": "{{baseUrl}}/api/usuarios"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('customer cannot list users and receives HTTP 403', function () {",
+                  "  pm.response.to.have.status(403);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('message');",
+                  "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

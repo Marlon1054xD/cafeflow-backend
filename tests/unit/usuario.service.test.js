@@ -1,73 +1,65 @@
-jest.mock("../../src/models/usuario.model", () => ({
-  create: jest.fn(),
-}));
-
 jest.mock("bcryptjs", () => ({
   hash: jest.fn(),
+}));
+
+jest.mock("../../src/models/usuario.model", () => ({
+  create: jest.fn(),
+  find: jest.fn(),
 }));
 
 const bcrypt = require("bcryptjs");
 const Usuario = require("../../src/models/usuario.model");
 const usuarioService = require("../../src/services/usuario.service");
 
-describe("usuarioService.crearUsuario", () => {
+describe("usuario.service", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    bcrypt.hash.mockResolvedValue("hashed-password");
   });
 
-  it("normalizes the email and returns only public user fields", async () => {
+  test("normaliza datos, cifra la contraseña y devuelve solo el perfil público", async () => {
+    bcrypt.hash.mockResolvedValue("hash-simulado");
     Usuario.create.mockResolvedValue({
-      _id: { toString: () => "user-id" },
-      nombre: "Esteban",
-      email: "esteban@example.test",
+      _id: { toString: () => "user-123" },
+      nombre: "Karen",
+      email: "karen@example.test",
       rol: "cliente",
-      password: "hashed-password",
+      password: "hash-simulado",
     });
-
-    const user = await usuarioService.crearUsuario({
-      nombre: " Esteban ",
-      email: " ESTEBAN@EXAMPLE.TEST ",
-      password: "a-secure-password",
-      rol: "cliente",
-    });
-
-    expect(bcrypt.hash).toHaveBeenCalledWith("a-secure-password", 12);
-    expect(Usuario.create).toHaveBeenCalledWith({
-      nombre: "Esteban",
-      email: "esteban@example.test",
-      password: "hashed-password",
-      rol: "cliente",
-    });
-    expect(user).toEqual({
-      id: "user-id",
-      nombre: "Esteban",
-      email: "esteban@example.test",
-      rol: "cliente",
-    });
-    expect(user).not.toHaveProperty("password");
-  });
-
-  it.each([
-    [{ nombre: " ", email: "user@example.test", password: "12345678", rol: "cliente" }],
-    [{ nombre: "Name", email: "invalid", password: "12345678", rol: "cliente" }],
-    [{ nombre: "Name", email: "user@example.test", password: "short", rol: "cliente" }],
-    [{ nombre: "Name", email: "user@example.test", password: "12345678", rol: "owner" }],
-  ])("rejects invalid user data", async (input) => {
-    await expect(usuarioService.crearUsuario(input)).rejects.toMatchObject({
-      statusCode: 400,
-    });
-    expect(Usuario.create).not.toHaveBeenCalled();
-  });
-
-  it("converts MongoDB duplicate-key errors into a conflict", async () => {
-    Usuario.create.mockRejectedValue({ code: 11000 });
 
     await expect(
       usuarioService.crearUsuario({
-        nombre: "Name",
-        email: "user@example.test",
-        password: "a-secure-password",
+        nombre: " Karen ",
+        email: " KAREN@Example.Test ",
+        password: "clave-segura",
+        rol: "cliente",
+      }),
+    ).resolves.toEqual({
+      id: "user-123",
+      nombre: "Karen",
+      email: "karen@example.test",
+      rol: "cliente",
+    });
+
+    expect(bcrypt.hash).toHaveBeenCalledWith("clave-segura", 12);
+    expect(Usuario.create).toHaveBeenCalledWith({
+      nombre: "Karen",
+      email: "karen@example.test",
+      password: "hash-simulado",
+      rol: "cliente",
+    });
+  });
+
+  test("convierte el error de índice único en HTTP 409", async () => {
+    bcrypt.hash.mockResolvedValue("hash-simulado");
+    Usuario.create.mockRejectedValue(
+      Object.assign(new Error("duplicate"), { code: 11000 }),
+    );
+
+    await expect(
+      usuarioService.crearUsuario({
+        nombre: "Karen",
+        email: "karen@example.test",
+        password: "clave-segura",
         rol: "cliente",
       }),
     ).rejects.toMatchObject({
@@ -76,17 +68,79 @@ describe("usuarioService.crearUsuario", () => {
     });
   });
 
-  it("propagates unexpected database errors", async () => {
-    const databaseError = new Error("database unavailable");
+  test.each([
+    [
+      { nombre: " ", email: "karen@example.test", password: "clave-segura", rol: "cliente" },
+      400,
+      "El nombre es obligatorio.",
+    ],
+    [
+      { nombre: "Karen", email: "invalido", password: "clave-segura", rol: "cliente" },
+      400,
+      "El email no es válido.",
+    ],
+    [
+      { nombre: "Karen", email: "karen@example.test", password: "short", rol: "cliente" },
+      400,
+      "La contraseña debe tener al menos 8 caracteres.",
+    ],
+    [
+      { nombre: "Karen", email: "karen@example.test", password: "clave-segura", rol: "superadmin" },
+      400,
+      "El rol no es válido.",
+    ],
+  ])("rechaza datos de registro inválidos", async (input, statusCode, message) => {
+    await expect(usuarioService.crearUsuario(input)).rejects.toMatchObject({
+      statusCode,
+      message,
+    });
+    expect(bcrypt.hash).not.toHaveBeenCalled();
+    expect(Usuario.create).not.toHaveBeenCalled();
+  });
+
+  test("propaga errores de almacenamiento distintos de duplicados", async () => {
+    const databaseError = new Error("storage unavailable");
+    bcrypt.hash.mockResolvedValue("hash-simulado");
     Usuario.create.mockRejectedValue(databaseError);
 
     await expect(
       usuarioService.crearUsuario({
-        nombre: "Name",
-        email: "user@example.test",
-        password: "a-secure-password",
+        nombre: "Karen",
+        email: "karen@example.test",
+        password: "clave-segura",
         rol: "cliente",
       }),
     ).rejects.toBe(databaseError);
+  });
+
+  test("lista usuarios ordenados y devuelve solo campos públicos", async () => {
+    const users = [
+      {
+        _id: { toString: () => "user-1" },
+        nombre: "Ana",
+        email: "ana@example.test",
+        rol: "cliente",
+        password: "no-publicar",
+      },
+    ];
+    const query = {
+      select: jest.fn().mockReturnThis(),
+      sort: jest.fn().mockReturnThis(),
+      lean: jest.fn().mockResolvedValue(users),
+    };
+    Usuario.find.mockReturnValue(query);
+
+    await expect(usuarioService.listarUsuarios()).resolves.toEqual([
+      {
+        id: "user-1",
+        nombre: "Ana",
+        email: "ana@example.test",
+        rol: "cliente",
+      },
+    ]);
+
+    expect(query.select).toHaveBeenCalledWith("nombre email rol");
+    expect(query.sort).toHaveBeenCalledWith({ _id: 1 });
+    expect(query.lean).toHaveBeenCalledTimes(1);
   });
 });

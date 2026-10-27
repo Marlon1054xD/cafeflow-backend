@@ -61,6 +61,106 @@ plantillas; no pongas secretos reales en esos ejemplos.
 - `src/services`: lógica de negocio.
 - `src/models`: modelos de datos.
 
+## Pruebas unitarias (SCRUM-17)
+
+Instala dependencias con `npm ci` y ejecuta:
+
+```bash
+npm run test:unit
+```
+
+Jest genera cobertura en consola y en `coverage/unit/`, incluyendo todos los
+archivos `src/**/*.js`, también los que aún no son ejecutados. Las pruebas
+actuales verifican el middleware JSON de Express, el conector de MongoDB con
+`mongoose.connect` simulado y el arranque del servidor con las dependencias
+externas simuladas; no abren conexión a MongoDB ni escuchan en un puerto real.
+También verifican registro, duplicados, login, hash de contraseñas, generación y
+validación de JWT, errores, perfil y permisos con los modelos, bcrypt y JWT
+simulados. Los controladores también se prueban directamente. La cobertura se
+recoge desde `src/**/*.js` sin excluir archivos de aplicación; incluye módulos
+que no ejecuten los casos seleccionados. El modelo no incluye un estado de
+cuenta activa/inactiva, por lo que no hay una regla de usuario inactivo que
+probar.
+
+## Pruebas de API con Postman y Newman (SCRUM-19)
+
+Importa en Postman:
+
+- Colección unificada: `postman/CafeFlow.postman_collection.json`
+- Ambiente de ejemplo sin credenciales reales:
+  `postman/CafeFlow.postman_environment.json`
+
+La colección organiza las solicitudes en las carpetas **Salud**,
+**Autenticación** y **Usuarios**, que son los módulos HTTP existentes. Cubre
+`GET /api/salud`, registro único, rechazo de duplicados y datos inválidos, login
+válido e incorrecto, perfil sin token, con token inválido y válido, y rechazo
+HTTP 403 al consultar la lista de usuarios como cliente. Comprueba códigos,
+tipos y estructura JSON, no exposición de contraseñas ni hashes y el tiempo de
+respuesta. El middleware unitario también verifica tokens vencidos; Newman no
+incluye un token vencido generado con un secreto local.
+
+Configura un ambiente de prueba, arranca el backend con `npm start` y ejecuta
+Newman desde PowerShell:
+
+```powershell
+$env:API_BASE_URL = 'http://localhost:3000'
+$env:POSTMAN_ENVIRONMENT = 'postman/CafeFlow.postman_environment.json'
+$env:MAX_RESPONSE_TIME_MS = '2000'
+npm run test:api
+```
+
+`API_BASE_URL` es opcional (por defecto `http://localhost:3000`); usa solamente
+una instancia iniciada con una base de pruebas aislada.
+`POSTMAN_ENVIRONMENT` puede apuntar a otro archivo de ambiente de Postman.
+`MAX_RESPONSE_TIME_MS` configura `maxResponseTimeMs` (2000 ms por defecto), un
+umbral inicial del proyecto y no un SLA; ajústalo con mediciones reales. El
+script común de la colección verifica tiempo de respuesta, JSON y ausencia de
+claves de contraseña/hash. El login captura automáticamente `access_token` en
+`accessToken`.
+
+El runner sale con código 2 e indica que las pruebas están pendientes si no
+hay solicitudes habilitadas; así una colección vacía no parece aprobada. Usa
+solo una base de pruebas aislada con `JWT_SECRET` y MongoDB configurados para
+ejecutar la colección.
+
+### Resultados y limitaciones de esta revisión
+
+En esta rama, `npm run test:unit` pasó 11 suites y 62 pruebas; Jest reportó
+98.06 % de cobertura de sentencias y líneas de la aplicación e incluyó los
+archivos fuente sin ejecutar. La suite unitaria no abre conexiones a MongoDB.
+Newman no se ejecutó en esta revisión: no había una API escuchando en el puerto
+local 3000. Por tanto, los casos de Postman no se presentan como aprobados;
+requieren una API iniciada contra una base aislada de pruebas.
+
+### Datos de prueba y limpieza segura
+
+Ejecuta contra una base aislada para pruebas. El registro usa el prefijo
+`cafeflow-newman-` y genera un correo único por ejecución. Para limpiar, busca
+ese correo exacto en `usuarios` y elimina solo el documento si confirmaste que
+lo creó tu ejecución. No borres colecciones, usuarios compartidos ni datos
+ajenos. El proyecto no implementa endpoint de limpieza. No guardes credenciales
+ni tokens reales en los archivos versionados; el token de acceso se captura en
+memoria durante el login.
+
+### Revisión de dependencias
+
+Jest, Supertest y Newman ya están declarados como dependencias de desarrollo en
+esta rama; los scripts y dependencias requeridos están configurados, por lo que
+esta actualización no modifica `package.json` ni `package-lock.json`. `npm ci`
+reportó 20 advisories transitivos (7 moderados, 12 altos y 1 crítico). No se
+aplicaron actualizaciones automáticas; acuerda con Esteban y Marlon cualquier
+cambio futuro a los manifiestos.
+
+## Preparar la entrega
+
+Tras la revisión del equipo, puedes crear un commit con los archivos de esta
+tarea y publicar la rama explícitamente:
+
+```bash
+git add package.json package-lock.json README.md tests scripts postman
+git commit -m "test: add Jest and Newman test suites"
+git push -u origin feature/SCRUM-17-19-pruebas-api
+```
 ## Endpoint de salud
 
 La API incluye una ruta de prueba para confirmar que el servicio responde:
@@ -232,10 +332,10 @@ if (-not $healthy) { throw "La API no respondió dentro de 60 segundos." }
 ```
 
 Una vez que el sondeo responda correctamente, ejecuta en esa misma terminal la
-colección versionada `tests/api/cafeflow.postman_collection.json` con Newman:
+colección unificada `postman/CafeFlow.postman_collection.json` con Newman:
 
 ```powershell
-npm run test:api -- --env-var "baseUrl=http://127.0.0.1:3000" --reporters cli
+npm run test:api
 ```
 
 La salida CLI de Newman es el reporte de la suite y puede guardarse localmente

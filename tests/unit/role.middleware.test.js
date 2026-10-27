@@ -12,7 +12,7 @@ describe("autorizarRoles", () => {
     next = jest.fn();
   });
 
-  it("returns 401 when authentication is missing", () => {
+  it("responde 401 cuando la solicitud no tiene usuario autenticado", () => {
     const middleware = autorizarRoles("admin");
 
     middleware({}, res, next);
@@ -24,7 +24,7 @@ describe("autorizarRoles", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("returns 403 when the user role is not allowed", () => {
+  it("responde 403 cuando el rol del usuario no está autorizado", () => {
     const middleware = autorizarRoles("admin");
 
     middleware({ user: { rol: "cliente" } }, res, next);
@@ -36,7 +36,7 @@ describe("autorizarRoles", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  it("continues when the user has an allowed role", () => {
+  it("continúa cuando el rol del usuario está autorizado", () => {
     const middleware = autorizarRoles("admin");
 
     middleware({ user: { rol: "admin" } }, res, next);

@@ -97,9 +97,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          npm run test:api -- \
-            --env-var "baseUrl=${API_BASE_URL}" \
-            --reporters cli 2>&1 | tee reports/newman.log
+          npm run test:api 2>&1 | tee reports/newman.log
 
       - name: Detener API
         if: always()
