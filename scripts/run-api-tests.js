@@ -5,9 +5,8 @@ const newman = require("newman");
 const root = path.resolve(__dirname, "..");
 const collectionPath = path.join(
   root,
-  "tests",
-  "api",
-  "cafeflow.postman_collection.json",
+  "postman",
+  "CafeFlow.postman_collection.json",
 );
 const environmentPath = path.resolve(
   root,
