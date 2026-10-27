@@ -1,18 +1,21 @@
 const { autorizarRoles } = require("../../src/middlewares/role.middleware");
 
-function createResponse() {
-  return {
-    status: jest.fn().mockReturnThis(),
-    json: jest.fn().mockReturnThis(),
-  };
-}
+describe("autorizarRoles", () => {
+  let res;
+  let next;
 
-describe("role.middleware", () => {
-  test("responde 401 cuando la ruta de roles recibe una solicitud sin usuario", () => {
-    const res = createResponse();
-    const next = jest.fn();
+  beforeEach(() => {
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+    };
+    next = jest.fn();
+  });
 
-    autorizarRoles("admin")({}, res, next);
+  it("responde 401 cuando la solicitud no tiene usuario autenticado", () => {
+    const middleware = autorizarRoles("admin");
+
+    middleware({}, res, next);
 
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({
@@ -21,11 +24,10 @@ describe("role.middleware", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  test("rechaza a un cliente en una ruta exclusiva de admin con 403", () => {
-    const res = createResponse();
-    const next = jest.fn();
+  it("responde 403 cuando el rol del usuario no está autorizado", () => {
+    const middleware = autorizarRoles("admin");
 
-    autorizarRoles("admin")({ user: { rol: "cliente" } }, res, next);
+    middleware({ user: { rol: "cliente" } }, res, next);
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({
@@ -34,13 +36,12 @@ describe("role.middleware", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
-  test("permite a admin en una ruta exclusiva de admin", () => {
-    const res = createResponse();
-    const next = jest.fn();
+  it("continúa cuando el rol del usuario está autorizado", () => {
+    const middleware = autorizarRoles("admin");
 
-    autorizarRoles("admin")({ user: { rol: "admin" } }, res, next);
+    middleware({ user: { rol: "admin" } }, res, next);
 
-    expect(next).toHaveBeenCalledWith();
+    expect(next).toHaveBeenCalledTimes(1);
     expect(res.status).not.toHaveBeenCalled();
   });
 });

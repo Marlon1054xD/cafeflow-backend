@@ -3,3 +3,8 @@ coverage/
 .env
 .env.*
 !.env.example
+!.env.*.example
+coverage/
+reports/
+performance/jmeter/users.local.csv
+performance/jmeter/results/

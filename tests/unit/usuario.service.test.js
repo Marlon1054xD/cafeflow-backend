@@ -16,7 +16,7 @@ describe("usuario.service", () => {
     jest.clearAllMocks();
   });
 
-  test("normaliza los datos, cifra contraseña y devuelve solo el perfil público", async () => {
+  test("normaliza datos, cifra la contraseña y devuelve solo el perfil público", async () => {
     bcrypt.hash.mockResolvedValue("hash-simulado");
     Usuario.create.mockResolvedValue({
       _id: { toString: () => "user-123" },
@@ -113,7 +113,7 @@ describe("usuario.service", () => {
     ).rejects.toBe(databaseError);
   });
 
-  test("lista usuarios ordenados y solo devuelve campos públicos", async () => {
+  test("lista usuarios ordenados y devuelve solo campos públicos", async () => {
     const users = [
       {
         _id: { toString: () => "user-1" },

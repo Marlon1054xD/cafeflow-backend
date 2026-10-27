@@ -2,6 +2,11 @@ jest.mock("dotenv", () => ({
   config: jest.fn(),
 }));
 
+jest.mock("../../src/config/environment", () => ({
+  loadEnvironment: jest.fn(),
+  validateEnvironment: jest.fn(),
+}));
+
 jest.mock("../../src/app", () => ({
   listen: jest.fn(),
 }));
@@ -14,6 +19,7 @@ const startServer = require("../../src/server");
 
 describe("startServer", () => {
   const originalMongoUri = process.env.MONGODB_URI;
+  const originalTestMongoUri = process.env.MONGODB_URI_TEST;
   const originalPort = process.env.PORT;
   const exitError = new Error("process.exit llamado en la prueba");
   let mockServer;
@@ -21,6 +27,7 @@ describe("startServer", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     delete process.env.MONGODB_URI;
+    delete process.env.MONGODB_URI_TEST;
     delete process.env.PORT;
     process.exitCode = 0;
     mockServer = { on: jest.fn() };
@@ -43,6 +50,11 @@ describe("startServer", () => {
     } else {
       process.env.MONGODB_URI = originalMongoUri;
     }
+    if (originalTestMongoUri === undefined) {
+      delete process.env.MONGODB_URI_TEST;
+    } else {
+      process.env.MONGODB_URI_TEST = originalTestMongoUri;
+    }
 
     if (originalPort === undefined) {
       delete process.env.PORT;
@@ -52,7 +64,7 @@ describe("startServer", () => {
   });
 
   test("conecta e inicia la escucha en el puerto configurado", async () => {
-    process.env.MONGODB_URI = "mongodb://example.test/cafeflow";
+    process.env.MONGODB_URI_TEST = "mongodb://example.test/cafeflow_test";
     process.env.PORT = "4321";
     connectToDatabase.mockResolvedValueOnce(undefined);
     app.listen.mockImplementationOnce((_port, onListening) => {
@@ -75,14 +87,14 @@ describe("startServer", () => {
 
   test("no inicia la escucha si falta MONGODB_URI", async () => {
     connectToDatabase.mockRejectedValueOnce(
-      Object.assign(new Error("MONGODB_URI is required."), {
-        code: "MONGODB_URI_MISSING",
+      Object.assign(new Error("MONGODB_URI_TEST is required."), {
+        code: "MONGODB_URI_TEST_MISSING",
       }),
     );
 
     await expect(startServer()).rejects.toBe(exitError);
     expect(console.error).toHaveBeenCalledWith(
-      "No se pudo iniciar CaféFlow: falta configurar MONGODB_URI en el archivo .env.",
+      "No se pudo iniciar CaféFlow: falta configurar MONGODB_URI_TEST.",
     );
     expect(process.exit).toHaveBeenCalledWith(1);
     expect(app.listen).not.toHaveBeenCalled();
@@ -100,7 +112,7 @@ describe("startServer", () => {
   });
 
   test("marca error de proceso cuando falla el servidor HTTP", async () => {
-    process.env.MONGODB_URI = "mongodb://example.test/cafeflow";
+    process.env.MONGODB_URI_TEST = "mongodb://example.test/cafeflow_test";
     connectToDatabase.mockResolvedValueOnce(undefined);
     await startServer();
 

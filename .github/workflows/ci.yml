@@ -1,0 +1,129 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      NODE_ENV: test
+      PORT: 3000
+      MONGODB_URI_TEST: mongodb://127.0.0.1:27017/cafeflow_test
+      JWT_SECRET: cafeflow-ci-only-not-for-production
+      JWT_EXPIRES_IN: 1h
+      API_BASE_URL: http://127.0.0.1:3000
+    services:
+      mongodb:
+        image: mongo:8.0
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_DATABASE: cafeflow_test
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Obtener código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        id: install-dependencies
+        run: npm ci
+
+      - name: Crear directorios de reportes
+        if: ${{ !cancelled() && steps.install-dependencies.outcome == 'success' }}
+        run: mkdir -p reports coverage
+
+      - name: Ejecutar pruebas unitarias
+        if: ${{ !cancelled() && steps.install-dependencies.outcome == 'success' }}
+        run: npm run test:unit
+
+      - name: Ejecutar pruebas de integración
+        if: ${{ !cancelled() && steps.install-dependencies.outcome == 'success' }}
+        run: npm run test:integration -- --coverage --coverageDirectory=coverage/integration
+
+      - name: Iniciar API y comprobar disponibilidad
+        id: api-start
+        if: ${{ !cancelled() && steps.install-dependencies.outcome == 'success' }}
+        shell: bash
+        run: |
+          node src/server.js > reports/api.log 2>&1 &
+          api_pid=$!
+          printf '%s\n' "$api_pid" > reports/api.pid
+          deadline=$((SECONDS + 60))
+
+          while true; do
+            if curl --silent --fail --max-time 2 \
+              "$API_BASE_URL/api/salud"; then
+              printf '\nAPI disponible.\n'
+              exit 0
+            fi
+
+            if ! kill -0 "$api_pid" 2>/dev/null; then
+              echo "La API terminó antes de responder al endpoint de salud."
+              exit 1
+            fi
+
+            if (( SECONDS >= deadline )); then
+              echo "La API no respondió dentro del límite de 60 segundos."
+              exit 1
+            fi
+
+            sleep 1
+          done
+
+      - name: Ejecutar pruebas API con Newman
+        if: ${{ !cancelled() && steps.api-start.outcome == 'success' }}
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run test:api 2>&1 | tee reports/newman.log
+
+      - name: Detener API
+        if: always()
+        shell: bash
+        run: |
+          if [ -f reports/api.pid ]; then
+            api_pid="$(cat reports/api.pid)"
+            if kill -0 "$api_pid" 2>/dev/null; then
+              kill "$api_pid"
+              for attempt in {1..10}; do
+                if ! kill -0 "$api_pid" 2>/dev/null; then
+                  break
+                fi
+                sleep 1
+              done
+            fi
+            rm -f reports/api.pid
+          fi
+
+      - name: Publicar cobertura y reportes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cafeflow-ci-reports
+          path: |
+            coverage/
+            reports/
+          if-no-files-found: warn
+          retention-days: 14

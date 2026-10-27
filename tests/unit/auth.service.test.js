@@ -24,11 +24,25 @@ const authService = require("../../src/services/auth.service");
 describe("auth.service", () => {
   const originalSecret = process.env.JWT_SECRET;
   const originalExpiresIn = process.env.JWT_EXPIRES_IN;
+  const usuario = {
+    _id: { toString: () => "user-123" },
+    nombre: "Ana",
+    email: "ana@example.test",
+    rol: "cliente",
+    password: "hash-almacenado",
+  };
+  const publicUser = {
+    id: "user-123",
+    nombre: "Ana",
+    email: "ana@example.test",
+    rol: "cliente",
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
     process.env.JWT_SECRET = "test-secret";
     delete process.env.JWT_EXPIRES_IN;
+    usuarioService.toPublicUser.mockReturnValue(publicUser);
   });
 
   afterAll(() => {
@@ -39,8 +53,7 @@ describe("auth.service", () => {
     else process.env.JWT_EXPIRES_IN = originalExpiresIn;
   });
 
-  test("registra con rol cliente delegando el hash al servicio de usuario", async () => {
-    const publicUser = { id: "user-1", nombre: "Ana", rol: "cliente" };
+  test("registra siempre con rol cliente", async () => {
     usuarioService.crearUsuario.mockResolvedValue(publicUser);
 
     await expect(
@@ -48,6 +61,7 @@ describe("auth.service", () => {
         nombre: "Ana",
         email: "ana@example.test",
         password: "clave-segura",
+        rol: "admin",
       }),
     ).resolves.toBe(publicUser);
 
@@ -59,24 +73,11 @@ describe("auth.service", () => {
     });
   });
 
-  test("inicia sesión con credenciales válidas y devuelve un JWT y perfil público", async () => {
-    const usuario = {
-      _id: { toString: () => "user-1" },
-      nombre: "Ana",
-      email: "ana@example.test",
-      rol: "cliente",
-      password: "hash-almacenado",
-    };
+  test("inicia sesión con credenciales válidas y devuelve JWT y perfil público", async () => {
     const query = { select: jest.fn().mockResolvedValue(usuario) };
     Usuario.findOne.mockReturnValue(query);
     bcrypt.compare.mockResolvedValue(true);
     jwt.sign.mockReturnValue("jwt-simulado");
-    usuarioService.toPublicUser.mockReturnValue({
-      id: "user-1",
-      nombre: "Ana",
-      email: "ana@example.test",
-      rol: "cliente",
-    });
     process.env.JWT_EXPIRES_IN = "30m";
 
     await expect(
@@ -86,12 +87,7 @@ describe("auth.service", () => {
       }),
     ).resolves.toEqual({
       access_token: "jwt-simulado",
-      user: {
-        id: "user-1",
-        nombre: "Ana",
-        email: "ana@example.test",
-        rol: "cliente",
-      },
+      user: publicUser,
     });
 
     expect(Usuario.findOne).toHaveBeenCalledWith({
@@ -105,15 +101,16 @@ describe("auth.service", () => {
     expect(jwt.sign).toHaveBeenCalledWith(
       { rol: "cliente" },
       "test-secret",
-      { subject: "user-1", expiresIn: "30m" },
+      { subject: "user-123", expiresIn: "30m" },
     );
   });
 
   test.each([
     [{ email: undefined, password: "clave-segura" }, 400],
     [{ email: "ana@example.test", password: "" }, 400],
+    [{ email: null, password: "clave-segura" }, 400],
     [{ email: "email-invalido", password: "clave-segura" }, 401],
-  ])("rechaza credenciales ausentes o con email inválido", async (credentials, statusCode) => {
+  ])("rechaza credenciales ausentes o inválidas", async (credentials, statusCode) => {
     await expect(authService.iniciarSesion(credentials)).rejects.toMatchObject({
       statusCode,
     });
@@ -138,9 +135,9 @@ describe("auth.service", () => {
     expect(bcrypt.compare).not.toHaveBeenCalled();
   });
 
-  test("rechaza el login si bcrypt indica contraseña incorrecta", async () => {
+  test("rechaza el login si la contraseña no coincide", async () => {
     Usuario.findOne.mockReturnValue({
-      select: jest.fn().mockResolvedValue({ password: "hash-almacenado" }),
+      select: jest.fn().mockResolvedValue(usuario),
     });
     bcrypt.compare.mockResolvedValue(false);
 
@@ -159,7 +156,7 @@ describe("auth.service", () => {
   test("falla explícitamente si JWT_SECRET no está configurado", async () => {
     delete process.env.JWT_SECRET;
     Usuario.findOne.mockReturnValue({
-      select: jest.fn().mockResolvedValue({ password: "hash-almacenado" }),
+      select: jest.fn().mockResolvedValue(usuario),
     });
     bcrypt.compare.mockResolvedValue(true);
 
