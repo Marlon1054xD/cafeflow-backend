@@ -8,7 +8,8 @@
     "test": "npm run test:integration",
     "test:unit": "jest --runInBand tests/unit --coverage --coverageDirectory=coverage/unit",
     "test:integration": "node tests/integration/run.js",
-    "test:api": "node scripts/run-api-tests.js"
+    "test:api": "node scripts/run-api-tests.js",
+    "seed:test-admin": "node scripts/seed-test-admin.js"
   },
   "repository": {
     "type": "git",

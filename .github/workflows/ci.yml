@@ -23,6 +23,8 @@ jobs:
       JWT_SECRET: cafeflow-ci-only-not-for-production
       JWT_EXPIRES_IN: 1h
       API_BASE_URL: http://127.0.0.1:3000
+      TEST_ADMIN_EMAIL: cafeflow-ci-admin@example.test
+      TEST_ADMIN_PASSWORD: cafeflow-ci-admin-only-password
     services:
       mongodb:
         image: mongo:8.0
@@ -61,6 +63,10 @@ jobs:
       - name: Ejecutar pruebas de integración
         if: ${{ !cancelled() && steps.install-dependencies.outcome == 'success' }}
         run: npm run test:integration -- --coverage --coverageDirectory=coverage/integration
+
+      - name: Preparar administrador de pruebas para Newman
+        if: ${{ !cancelled() && steps.install-dependencies.outcome == 'success' }}
+        run: npm run seed:test-admin
 
       - name: Iniciar API y comprobar disponibilidad
         id: api-start

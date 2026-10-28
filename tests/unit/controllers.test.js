@@ -4,7 +4,10 @@ jest.mock("../../src/services/auth.service", () => ({
 }));
 
 jest.mock("../../src/services/usuario.service", () => ({
+  actualizarPerfil: jest.fn(),
   listarUsuarios: jest.fn(),
+  obtenerEstadisticas: jest.fn(),
+  obtenerUsuarioPorId: jest.fn(),
 }));
 
 const authService = require("../../src/services/auth.service");
@@ -87,5 +90,44 @@ describe("controllers", () => {
     expect(usuarioService.listarUsuarios).toHaveBeenCalledTimes(1);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({ users });
+  });
+
+  test("obtiene un usuario por id usando el servicio", async () => {
+    const user = { id: "user-1", rol: "cliente" };
+    const res = createResponse();
+    usuarioService.obtenerUsuarioPorId.mockResolvedValue(user);
+
+    await usuariosController.obtenerPorId({ params: { id: "user-1" } }, res);
+
+    expect(usuarioService.obtenerUsuarioPorId).toHaveBeenCalledWith("user-1");
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ user });
+  });
+
+  test("devuelve estadísticas mediante el servicio", async () => {
+    const statistics = { total: 1, clientes: 1, administradores: 0 };
+    const res = createResponse();
+    usuarioService.obtenerEstadisticas.mockResolvedValue(statistics);
+
+    await usuariosController.obtenerEstadisticas({}, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ statistics });
+  });
+
+  test("actualiza el perfil del usuario autenticado", async () => {
+    const user = { id: "user-1", nombre: "Ana" };
+    const req = { user: { id: "user-1" }, body: { nombre: "Ana" } };
+    const res = createResponse();
+    usuarioService.actualizarPerfil.mockResolvedValue(user);
+
+    await usuariosController.actualizarPerfil(req, res);
+
+    expect(usuarioService.actualizarPerfil).toHaveBeenCalledWith(
+      "user-1",
+      req.body,
+    );
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ user });
   });
 });

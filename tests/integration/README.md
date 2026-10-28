@@ -25,9 +25,13 @@ integración entre HTTP, enrutador y controlador, pero **no** integra la lógica
 real del servicio, MongoDB, modelos ni autenticación.
 
 `auth.integration.js` conecta a MongoDB real mediante
-`MONGODB_URI_TEST` y cubre registro → login → perfil, hash/roles públicos,
-duplicados, validación, credenciales incorrectas y autorización de cliente y
-administrador. `uri-safety.test.js` comprueba la validación de la URI de pruebas.
+`MONGODB_URI_TEST` y contiene diez escenarios: registro → login → perfil,
+duplicados y validación, credenciales incorrectas, autorización cliente/admin,
+actualización segura de perfil, prevención de cambios de rol/contraseña,
+rechazo de emails duplicados al actualizar, búsqueda pública por id,
+validación de ids inexistentes/incorrectos y estadísticas protegidas por rol.
+Cada escenario usa datos de la base MongoDB y elimina solo los documentos que
+creó. `uri-safety.test.js` comprueba la validación de la URI de pruebas.
 
 Los drivers que usen MongoDB deben generar identificadores/emails únicos por
 ejecución y eliminar solo los documentos que esa ejecución haya creado. No

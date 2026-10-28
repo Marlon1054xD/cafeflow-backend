@@ -323,6 +323,38 @@
           ]
         },
         {
+          "name": "Actualizar perfil propio",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Postman Updated Customer\"\n}"
+            },
+            "url": "{{baseUrl}}/api/usuarios/me"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('authenticated customer can update only their own public profile', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.all.keys('user');",
+                  "  pm.expect(body.user.nombre).to.eql('Postman Updated Customer');",
+                  "  pm.expect(body.user.rol).to.eql('cliente');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Denegar lista de usuarios a cliente",
           "request": {
             "method": "GET",
@@ -342,6 +374,105 @@
                   "  const body = pm.response.json();",
                   "  pm.expect(body).to.have.all.keys('message');",
                   "  pm.expect(body.message).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Iniciar sesión como administrador",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('test administrator login returns a JWT and admin profile', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.access_token).to.be.a('string').and.not.empty;",
+                  "  pm.expect(body.user.rol).to.eql('admin');",
+                  "  pm.environment.set('adminToken', body.access_token);",
+                  "  pm.environment.set('adminUserId', body.user.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar estadísticas como administrador",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/usuarios/estadisticas"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('administrator can read user statistics', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().statistics).to.have.all.keys('total', 'clientes', 'administradores');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar usuarios como administrador",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/usuarios"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('administrator can list public user profiles without hashes', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().users).to.be.an('array');",
+                  "  pm.expect(pm.response.text()).not.to.match(/password|hash|digest/i);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar usuario por id como administrador",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/usuarios/{{adminUserId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('administrator can read a public user profile by id', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.user.id).to.eql(pm.environment.get('adminUserId'));",
+                  "  pm.expect(body.user.rol).to.eql('admin');",
                   "});"
                 ]
               }
