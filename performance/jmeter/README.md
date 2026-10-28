@@ -1,87 +1,97 @@
-# JMeter: carga y estrés
+# JMeter: carga y seguridad con JWT
 
-Los cuatro planes separan carga/estrés de login y del único endpoint crítico
-disponible hoy (`GET /api/salud`):
+## Plan de cinco rutas privadas
 
-- `carga-login.jmx` y `estres-login.jmx`: `POST /api/auth/login`.
-- `carga-salud.jmx` y `estres-salud.jmx`: `GET /api/salud`.
+`carga-rutas-privadas-jwt.jmx` verifica en cada iteracion:
 
-Los planes de login están preparados según el contrato acordado, pero no se
-pueden ejecutar hasta que el endpoint exista. No se deben dirigir a producción,
-ni a servicios de terceros: usa únicamente un backend local o de pruebas
-autorizado y comienza con los valores bajos predeterminados.
+1. `GET /api/usuarios/me` sin token devuelve `401`.
+2. `POST /api/auth/login` devuelve `200` y un `access_token`.
+3. `GET /api/usuarios/me` acepta el JWT.
+4. `PATCH /api/usuarios/me` acepta el JWT y actualiza el nombre de la cuenta
+   de prueba.
+5. `GET /api/usuarios/estadisticas` acepta JWT de admin.
+6. `GET /api/usuarios` acepta JWT de admin.
+7. `GET /api/usuarios/{id}` acepta JWT de admin y el id extraido del login.
 
-## Preparar las credenciales
+El plan solo usa cuentas, MongoDB y API desechables autorizados. **No lo ejecutes
+contra produccion, internet ni servicios de terceros.** El usuario debe tener rol
+`admin` en la base de pruebas; el registro publico no asigna ese rol.
 
-En un archivo local ignorado por Git llamado
-`performance/jmeter/users.local.csv`, guarda una cabecera y una fila por cuenta
-de prueba válida:
+## Preparar el entorno local
 
-```csv
-email,password
-usuario1@example.test,contraseña-local-1
-usuario2@example.test,contraseña-local-2
-```
+Instala Java y Apache JMeter 5.6.3 o compatible; `jmeter` debe estar en `PATH`.
+Inicia MongoDB en una base desechable y el backend con `NODE_ENV=test`,
+`MONGODB_URI_TEST` apuntando a esa base y `JWT_SECRET` solo de pruebas.
 
-No uses credenciales reales ni agregues este archivo al repositorio. El plan
-comparte las filas entre los usuarios virtuales, no las recicla y detiene cada
-hilo al agotarlas. Para `users=10` y `loops=20`, prepara al menos 200 filas con
-credenciales aceptadas por el entorno; así cada solicitud usa una cuenta
-válida distinta en lugar de contaminar las métricas con errores esperados.
+1. Registra una cuenta de prueba con `POST /api/auth/register`.
+2. Cambia su rol a `admin` directamente en la base de pruebas, por ejemplo con
+   `mongosh`:
 
-## Ejecución no gráfica y reporte HTML
+   ```javascript
+   use cafeflow_test
+   db.usuarios.updateOne(
+     { email: "jmeter-admin@example.test" },
+     { $set: { rol: "admin" } }
+   )
+   ```
 
-Requiere Apache JMeter instalado (`jmeter` en `PATH`) y el backend local activo.
-PowerShell: los resultados se escriben en carpetas locales ignoradas por Git; el
-directorio destino del reporte debe no existir antes de ejecutar.
+3. Confirma que el login funciona. En
+   `performance/jmeter/users.local.csv` (archivo ignorado por Git) guarda solo
+   esa cuenta:
 
-Carga de salud:
+   ```csv
+   email,password
+   jmeter-admin@example.test,clave-local-de-pruebas
+   ```
 
-```powershell
-jmeter -n -t performance/jmeter/carga-salud.jmx -Jprotocol=http -Jhost=127.0.0.1 -Jport=3000 -Jusers=5 -JrampUp=30 -Jduration=120 -Jloops=20 -l performance/jmeter/results/carga-salud.jtl -e -o performance/jmeter/results/carga-salud-html
-```
+   No guardes en el CSV contrasenas reales ni compartas el archivo. JMeter
+   recicla las credenciales para iteraciones acotadas. El plan cambia el nombre
+   del usuario a `JMeter Test Admin`; crea una cuenta desechable solo para este
+   ensayo.
 
-Estrés gradual de salud:
+## Prueba de humo recomendada
 
-```powershell
-jmeter -n -t performance/jmeter/estres-salud.jmx -Jprotocol=http -Jhost=127.0.0.1 -Jport=3000 -Jusers=10 -JrampUp=60 -Jduration=120 -Jloops=20 -l performance/jmeter/results/estres-salud.jtl -e -o performance/jmeter/results/estres-salud-html
-```
-
-Carga de login (después de desplegar el endpoint y preparar suficientes
-credenciales válidas):
-
-```powershell
-jmeter -n -t performance/jmeter/carga-login.jmx -Jprotocol=http -Jhost=127.0.0.1 -Jport=3000 -Jusers=5 -JrampUp=30 -Jduration=120 -Jloops=20 -JcredentialsFile=performance/jmeter/users.local.csv -l performance/jmeter/results/carga-login.jtl -e -o performance/jmeter/results/carga-login-html
-```
-
-Estrés gradual de login:
+Desde la raiz del proyecto, ejecuta una iteracion y un usuario. Sustituye la
+contrasena del ejemplo en el CSV local; no la pongas en la linea de comandos.
 
 ```powershell
-jmeter -n -t performance/jmeter/estres-login.jmx -Jprotocol=http -Jhost=127.0.0.1 -Jport=3000 -Jusers=10 -JrampUp=60 -Jduration=120 -Jloops=20 -JcredentialsFile=performance/jmeter/users.local.csv -l performance/jmeter/results/estres-login.jtl -e -o performance/jmeter/results/estres-login-html
+New-Item -ItemType Directory -Force performance/jmeter/results | Out-Null
+jmeter -n -t performance/jmeter/carga-rutas-privadas-jwt.jmx `
+  -Jprotocol=http -Jhost=localhost -Jport=3000 `
+  -Jusers=1 -JrampUp=1 -Jloops=1 `
+  -JcredentialsFile=performance/jmeter/users.local.csv `
+  -l performance/jmeter/results/jwt-smoke.jtl
 ```
 
-`protocol`, `host`, `port`, `users`, `rampUp` y `duration` son parámetros
-JMeter; `loops` limita las iteraciones y `credentialsFile` selecciona el CSV de
-login. Salud mantiene solicitudes hasta alcanzar `duration`; login termina al
-completar `loops` o al agotarse el CSV (duration es un límite máximo). Los valores
-predeterminados de los planes son conservadores. Aumenta
-usuarios o duración solo gradualmente, con autorización, y supervisa el backend
-y MongoDB; interrumpe la prueba si el entorno se degrada. No ejecutes carga de
-estrés contra el entorno compartido sin acordarlo antes con Esteban.
+Al terminar, comprueba los siete samplers, que el sampler sin token da el
+resultado esperado `401`, y que login y las cinco rutas privadas pasan con cero
+assertion failures. La prueba de humo no es un resultado de carga.
 
-## Resultados y lectura
+## Generar reporte de carga y seguridad
 
-Registra para cada plan el entorno (máquina, versión Node/JMeter y base aislada),
-fecha, parámetros, **promedio**, **percentil 95**, **throughput** (solicitudes/s)
-y **porcentaje de errores**. El reporte HTML de JMeter muestra estadísticas por
-sampler y el archivo JTL conserva las muestras. Compara los planes con los
-mismos recursos y configuración, y distingue respuestas fallidas por bugs de
-credenciales/configuración de fallos bajo carga. No hay métricas reportadas aún:
-JMeter no está instalado en este equipo y la autenticación no existe todavía.
+Solo despues de la prueba de humo, ejecuta un perfil pequeno en la base local de
+pruebas y aumenta concurrencia gradualmente:
+
+```powershell
+jmeter -n -t performance/jmeter/carga-rutas-privadas-jwt.jmx `
+  -Jprotocol=http -Jhost=localhost -Jport=3000 `
+  -Jusers=5 -JrampUp=10 -Jloops=10 `
+  -JcredentialsFile=performance/jmeter/users.local.csv `
+  -l performance/jmeter/results/carga-rutas-jwt.jtl `
+  -e -o performance/jmeter/results/carga-rutas-jwt-html
+```
+
+El directorio HTML de destino debe no existir antes de ejecutar. No hagas prueba
+de estres a menos que el docente y el equipo autoricen el perfil y el entorno.
+Monitorea API y MongoDB e interrumpe si el entorno se degrada.
+
+El plan produce 7 solicitudes por iteracion (una verificacion de rechazo, login
+y cinco rutas privadas). Captura promedio, P95, throughput y errores del HTML.
+Guarda el resumen del resultado real y el reporte generado en el repositorio
+antes de entregar; `performance/jmeter/results/` se ignora en Git para evitar
+subir datos de prueba por accidente. Revisa y publica manualmente un reporte
+limpio, sin tokens, contrasenas, correos personales ni datos sensibles.
 
 | Escenario | Promedio | P95 | Throughput | Errores | Estado |
 |---|---:|---:|---:|---:|---|
-| Carga - salud | pendiente | pendiente | pendiente | pendiente | No ejecutado |
-| Estrés - salud | pendiente | pendiente | pendiente | pendiente | No ejecutado |
-| Carga - login | pendiente | pendiente | pendiente | pendiente | Endpoint pendiente |
-| Estrés - login | pendiente | pendiente | pendiente | pendiente | Endpoint pendiente |
+| JWT y 5 rutas privadas | 117.26 ms | 437.85 ms | 11.61 solicitudes/s | 0.00 % | Ejecutado localmente; 42 muestras; [reporte](../../docs/evidencias/jmeter-resumen.md) |

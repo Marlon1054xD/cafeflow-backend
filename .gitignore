@@ -8,3 +8,4 @@ coverage/
 reports/
 performance/jmeter/users.local.csv
 performance/jmeter/results/
+jmeter.log

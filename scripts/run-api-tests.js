@@ -49,6 +49,12 @@ if (!Number.isFinite(maxResponseTimeMs) || maxResponseTimeMs <= 0) {
   throw new Error("MAX_RESPONSE_TIME_MS debe ser un número mayor que cero.");
 }
 
+if (!process.env.TEST_ADMIN_EMAIL || !process.env.TEST_ADMIN_PASSWORD) {
+  throw new Error(
+    "TEST_ADMIN_EMAIL y TEST_ADMIN_PASSWORD son obligatorios para probar las rutas de administrador.",
+  );
+}
+
 const collection = JSON.parse(fs.readFileSync(collectionPath, "utf8"));
 const environment = JSON.parse(fs.readFileSync(environmentPath, "utf8"));
 
@@ -64,6 +70,16 @@ if (countEnabledRequests(collection.item || []) === 0) {
     "maxResponseTimeMs",
     String(maxResponseTimeMs),
   );
+  if (process.env.TEST_ADMIN_EMAIL) {
+    setEnvironmentValue(environment, "adminEmail", process.env.TEST_ADMIN_EMAIL);
+  }
+  if (process.env.TEST_ADMIN_PASSWORD) {
+    setEnvironmentValue(
+      environment,
+      "adminPassword",
+      process.env.TEST_ADMIN_PASSWORD,
+    );
+  }
 
   newman.run(
     { collection, environment, reporters: ["cli"] },

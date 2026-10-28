@@ -60,6 +60,11 @@ plantillas; no pongas secretos reales en esos ejemplos.
 - `src/controllers`: manejo de solicitudes y respuestas.
 - `src/services`: lógica de negocio.
 - `src/models`: modelos de datos.
+- Contrato completo de rutas: [`docs/rutas-api.md`](./docs/rutas-api.md).
+- Checklist, enlaces de entrega y guion del video:
+  [`docs/entrega-parcial.md`](./docs/entrega-parcial.md).
+- Backlog inicial importable en Google Sheets:
+  [`docs/scrum-backlog.csv`](./docs/scrum-backlog.csv).
 
 ## Pruebas unitarias (SCRUM-17)
 
@@ -94,10 +99,11 @@ La colección organiza las solicitudes en las carpetas **Salud**,
 **Autenticación** y **Usuarios**, que son los módulos HTTP existentes. Cubre
 `GET /api/salud`, registro único, rechazo de duplicados y datos inválidos, login
 válido e incorrecto, perfil sin token, con token inválido y válido, y rechazo
-HTTP 403 al consultar la lista de usuarios como cliente. Comprueba códigos,
-tipos y estructura JSON, no exposición de contraseñas ni hashes y el tiempo de
-respuesta. El middleware unitario también verifica tokens vencidos; Newman no
-incluye un token vencido generado con un secreto local.
+HTTP 403 al consultar la lista de usuarios como cliente, actualización de perfil
+y rutas de administrador (login, estadísticas, lista y detalle por id).
+Comprueba códigos, tipos y estructura JSON, no exposición de contraseñas ni
+hashes y el tiempo de respuesta. El middleware unitario también verifica tokens
+vencidos; Newman no incluye un token vencido generado con un secreto local.
 
 Configura un ambiente de prueba, arranca el backend con `npm start` y ejecuta
 Newman desde PowerShell:
@@ -106,8 +112,16 @@ Newman desde PowerShell:
 $env:API_BASE_URL = 'http://localhost:3000'
 $env:POSTMAN_ENVIRONMENT = 'postman/CafeFlow.postman_environment.json'
 $env:MAX_RESPONSE_TIME_MS = '2000'
+$env:TEST_ADMIN_EMAIL = 'admin-local@example.test'
+$env:TEST_ADMIN_PASSWORD = 'reemplazar-por-clave-local'
+npm run seed:test-admin
 npm run test:api
 ```
+
+Prepara la cuenta con el script anterior solo si `MONGODB_URI_TEST` apunta a
+una base desechable local. El registro publico crea clientes, nunca admins.
+Define las variables de entorno de administrador tambien en el proceso que
+ejecuta Newman; no las guardes en el ambiente versionado.
 
 `API_BASE_URL` es opcional (por defecto `http://localhost:3000`); usa solamente
 una instancia iniciada con una base de pruebas aislada.
@@ -125,12 +139,12 @@ ejecutar la colección.
 
 ### Resultados y limitaciones de esta revisión
 
-En esta rama, `npm run test:unit` pasó 11 suites y 62 pruebas; Jest reportó
-98.06 % de cobertura de sentencias y líneas de la aplicación e incluyó los
-archivos fuente sin ejecutar. La suite unitaria no abre conexiones a MongoDB.
-Newman no se ejecutó en esta revisión: no había una API escuchando en el puerto
-local 3000. Por tanto, los casos de Postman no se presentan como aprobados;
-requieren una API iniciada contra una base aislada de pruebas.
+Ejecuta de nuevo `npm run test:unit`, `npm run test:integration` y
+`npm run test:api` despues de cada cambio antes de presentar resultados. Las
+pruebas de integracion requieren una instancia MongoDB real aislada; Newman
+requiere que la API este levantada contra una base aislada. El workflow de CI
+ejecuta Jest, integracion y Newman, pero la evidencia de entrega debe enlazar a
+una ejecucion verde real en GitHub Actions.
 
 ### Datos de prueba y limpieza segura
 
@@ -146,10 +160,10 @@ memoria durante el login.
 
 Jest, Supertest y Newman ya están declarados como dependencias de desarrollo en
 esta rama; los scripts y dependencias requeridos están configurados, por lo que
-esta actualización no modifica `package.json` ni `package-lock.json`. `npm ci`
-reportó 20 advisories transitivos (7 moderados, 12 altos y 1 crítico). No se
-aplicaron actualizaciones automáticas; acuerda con Esteban y Marlon cualquier
-cambio futuro a los manifiestos.
+esta actualización no modifica `package.json` ni `package-lock.json`. `npm ci` reportó 25 advisories en dependencias transitivas (5 bajos, 7
+moderados, 12 altos y 1 crítico). No se aplicaron actualizaciones automáticas.
+Revisa `npm audit` y planifica la actualización de la cadena Newman antes de
+publicar el proyecto.
 
 ## Preparar la entrega
 
@@ -272,6 +286,10 @@ aceptada por jsonwebtoken (por ejemplo, `15m` o `1h`) y usa `1h` si no se define
 
 - Integración, configuración y limitaciones: [`tests/integration/README.md`](./tests/integration/README.md).
 - Planes de carga/estrés JMeter, ejecución y reporte: [`performance/jmeter/README.md`](./performance/jmeter/README.md).
+- Plan JMeter JWT que comprueba cinco rutas privadas:
+  [`carga-rutas-privadas-jwt.jmx`](./performance/jmeter/carga-rutas-privadas-jwt.jmx).
+- Enlaces y tareas que requieren publicación externa:
+  [`docs/entrega-parcial.md`](./docs/entrega-parcial.md).
 
 ## Integración continua (GitHub Actions)
 
@@ -291,9 +309,12 @@ $env:MONGODB_URI_TEST = "mongodb://127.0.0.1:27017/cafeflow_test"
 $env:JWT_SECRET = "secreto-local-solo-para-pruebas"
 $env:JWT_EXPIRES_IN = "1h"
 $env:PORT = "3000"
+$env:TEST_ADMIN_EMAIL = "admin-local@example.test"
+$env:TEST_ADMIN_PASSWORD = "reemplazar-por-clave-local"
 npm ci
 npm run test:unit
 npm run test:integration -- --coverage --coverageDirectory=coverage/integration
+npm run seed:test-admin
 ```
 
 Las pruebas unitarias no requieren MongoDB. Las de integración conectan a
@@ -331,10 +352,13 @@ while ((Get-Date) -lt $deadline) {
 if (-not $healthy) { throw "La API no respondió dentro de 60 segundos." }
 ```
 
-Una vez que el sondeo responda correctamente, ejecuta en esa misma terminal la
-colección unificada `postman/CafeFlow.postman_collection.json` con Newman:
+En la terminal donde ejecutarás Newman, define el mismo administrador de
+pruebas y corre el seed (una vez) antes de iniciar la colección:
 
 ```powershell
+$env:TEST_ADMIN_EMAIL = "admin-local@example.test"
+$env:TEST_ADMIN_PASSWORD = "reemplazar-por-clave-local"
+npm run seed:test-admin
 npm run test:api
 ```
 
