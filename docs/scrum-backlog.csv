@@ -1,8 +1,9 @@
-ID,Epic,Historia de usuario,Criterios de aceptacion,Sprint,Estado,Responsable,Prioridad
-CF-01,Autenticacion,Como cliente quiero registrarme e iniciar sesion para acceder a mi cuenta,"Registro, login, JWT y pruebas unitarias/integracion",Sprint 1,Hecho en repositorio,Por asignar,Alta
-CF-02,Usuarios,Como usuario quiero consultar y actualizar mi perfil,"GET/PATCH /api/usuarios/me con JWT y campos permitidos",Sprint 2,Implementado local - validar CI,Por asignar,Alta
-CF-03,Administracion,Como admin quiero consultar usuarios por id y estadisticas,"Rutas requieren rol admin; respuestas no exponen hashes",Sprint 2,Probado local,Por asignar,Alta
-CF-04,Aseguramiento,Como equipo quiero validar rutas y permisos con pruebas,"Jest y al menos diez escenarios de integracion con MongoDB",Sprint 3,75 unitarias y 10 escenarios MongoDB aprobados localmente,Por asignar,Alta
-CF-05,Automatizacion,Como equipo quiero ejecuciones reproducibles en CI,"GitHub Actions ejecuta Jest, MongoDB de prueba y Newman",Sprint 3,Workflow existente - falta evidencia publicada,Por asignar,Alta
-CF-06,Rendimiento y seguridad,Como equipo quiero medir cinco rutas privadas con JWT,"JMeter extrae token, comprueba 401 sin token y genera JTL/HTML",Sprint 4,Reporte HTML generado localmente,Por asignar,Alta
-CF-07,Entrega,Como equipo quiero compartir los artefactos evaluables,"Enlaces accesibles a Jira, hoja SCRUM, Postman y Actions",Sprint 4,Faltan enlaces externos confirmados,Por asignar,Alta
+"ID Jira","Historia de usuario","Criterios de aceptacion","Sprint observado","Estado observado en Jira","Responsable observado","Prioridad"
+"SCRUM-15","Registrar usuarios e iniciar sesion","Registro, login y JWT; pruebas asociadas","Sprint 2","Finalizado","f.quenguan19","Alta"
+"SCRUM-16","Proteger endpoints con JWT y roles","Rutas privadas validan JWT y autorizan por rol","Sprint 2","Finalizado","f.quenguan19","Alta"
+"SCRUM-17","Implementar pruebas unitarias con Jest","Al menos diez unitarias; la suite local actual tiene 75","Sprint 2","Finalizado","Karen Coetata","Alta"
+"SCRUM-18","Implementar pruebas de integracion Top-down y Bottom-up","Al menos diez escenarios; suite MongoDB local actual tiene 10","Sprint 2","Finalizado","Marlon Daniel Viveros Narvaez","Alta"
+"SCRUM-19","Automatizar pruebas de API con Postman","Coleccion Newman pasa 15 solicitudes y 45 aserciones localmente","Sprint 2","Finalizado","Karen Coetata","Media"
+"SCRUM-20","Evaluar carga y estres de la API con JMeter","Reporte local: JWT y cinco rutas privadas; ampliar medicion si docente lo requiere","Sprint 2","Finalizado","Marlon Daniel Viveros Narvaez","Media"
+"SCRUM-21","Configurar CI con GitHub Actions y Newman","Run verde del workflow para el merge del PR #10","Sprint 2","Finalizado","Esteban Ceron","Alta"
+"ENTREGA-01","Completar evidencias externas del parcial","Actualizar hoja SCRUM, compartir coleccion Postman y grabar video de maximo 3 minutos","Por confirmar con docente","Pendiente: requiere permiso de edicion y publicacion externa","Por asignar","Alta"

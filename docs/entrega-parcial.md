@@ -1,9 +1,8 @@
 # Checklist de entrega del parcial
 
-Esta lista distingue los archivos que se pueden verificar en el repositorio de
-los enlaces que requieren publicar o compartir recursos con las cuentas del
-equipo. No afirma que haya una ejecucion remota de CI o una coleccion publica
-hasta que se compruebe en esas plataformas.
+Esta lista distingue las evidencias verificadas de las acciones que requieren
+permisos de las cuentas del equipo. No afirma que la hoja SCRUM sea editable ni
+que exista una coleccion publica de Postman sin comprobarlo.
 
 ## Evidencias en el repositorio
 
@@ -23,24 +22,33 @@ hasta que se compruebe en esas plataformas.
   [`resumen de métricas`](./evidencias/jmeter-resumen.md).
 - [x] Backlog inicial importable a la hoja SCRUM:
   [`scrum-backlog.csv`](./scrum-backlog.csv).
+- [x] Guion cronometrado del video:
+  [`guion-video.md`](./guion-video.md).
 
 ## Enlaces que deben completarse antes de entregar
 
 - Repositorio GitHub: https://github.com/Marlon1054xD/cafeflow-backend
-- Ejecucion exitosa de GitHub Actions:
-  https://github.com/Marlon1054xD/cafeflow-backend/actions
-- Hoja SCRUM del equipo: usar el enlace existente en el README y confirmar
-  acceso de lectura para el docente.
+- PR #10 fusionado:
+  https://github.com/Marlon1054xD/cafeflow-backend/pull/10
+- Ejecucion CI verde para el commit `6c04e3386a78ec5abddabc0c11325353bd8ed7e6`:
+  https://github.com/Marlon1054xD/cafeflow-backend/actions/runs/40729107307
+- Hoja SCRUM (el acceso actual permite solo ver; hace falta permiso de edicion
+  para actualizarla):
+  https://docs.google.com/spreadsheets/d/1uLeyWFG8C-NzjGinBdygrRYZwfu34rs6/edit?usp=sharing&ouid=103795475046358659572&rtpof=true&sd=true
 - Tablero Jira:
   https://nightowlsxd.atlassian.net/jira/software/projects/SCRUM/boards/1?filter=&groupBy=none
+- Estado observado en Jira: el tablero abierto se titula Sprint 2 y muestra
+  SCRUM-15 a SCRUM-21 en Finalizado. No se modificaron historias ni sprints.
 - Coleccion publica/compartida de Postman: **publicar desde la cuenta del equipo
-  y pegar aqui el enlace**.
+  y pegar aqui el enlace**. La sesion Postman no esta autenticada en este
+  navegador.
 - Reporte HTML JMeter (carga y seguridad JWT):
   [`evidencias/jmeter-rutas-jwt/index.html`](./evidencias/jmeter-rutas-jwt/index.html).
+- Video de entrega: pendiente de grabacion por el equipo.
 
-Los enlaces a GitHub Actions abren la lista de ejecuciones, no prueban por si
-mismos un resultado exitoso. Copia el enlace de una ejecucion verde despues de
-subir los cambios y de que termine el workflow.
+La ejecucion enlazada corresponde al commit fusionado y termino correctamente:
+pasaron instalacion, Jest, integracion, preparacion del admin, disponibilidad
+de API, Newman y publicacion de artefactos.
 
 ## Validacion local realizada
 
@@ -53,37 +61,34 @@ subir los cambios y de que termine el workflow.
   throughput 11.61 solicitudes/s. Ver
   [`resumen JMeter`](./evidencias/jmeter-resumen.md).
 
-Estos resultados son locales; no son evidencia de que los cambios ya esten
-publicados ni de que el workflow remoto de GitHub haya pasado.
+Los resultados locales se volvieron a ejecutar en la copia actualizada despues
+del merge. El run de Actions enlazado verifica el commit fusionado en GitHub.
 
 ## Hoja SCRUM
 
-Importa `scrum-backlog.csv` en Google Sheets y sincroniza sus historias con el
-tablero Jira, asignando personas, prioridad, fechas y estado reales del equipo.
-No se inventan responsables ni fechas en esta plantilla.
+El archivo `scrum-backlog.csv` es una plantilla de sincronizacion. La hoja
+enlazada abre en modo Solo ver para la cuenta disponible, por lo que la
+importacion/actualizacion no se pudo guardar. Pide permiso de editor al
+propietario y despues importa el CSV o copia las filas. El tablero Jira si abre
+y ya muestra las historias SCRUM-15 a SCRUM-21 finalizadas, con responsables
+asignados; no se cambiaron sus datos.
 
 La consigna compartida contiene una discrepancia: una parte solicita 4 sprints y
-otra dice que deben ser 3. La plantilla usa cuatro porque la metodologia de
-entregas progresivas especifica 4; si el docente confirma que son 3, ajusta las
-asignaciones antes de entregar.
+otra dice que deben ser 3. El tablero visible actualmente esta en Sprint 2. La
+cantidad final de sprints no se puede inferir del estado del tablero: confirma
+con el docente si exige 3 o 4 antes de importar el backlog.
 
 ## Publicar y ejecutar
 
-1. En Postman importa la coleccion y el ambiente de ejemplo. Publica/compartela
-   desde tu cuenta y pega el enlace resultante en esta lista. Define `adminEmail`
-   y `adminPassword` con una cuenta admin de pruebas; nunca guardes credenciales
-   verdaderas en Git.
-2. Ejecuta `npm run test:unit` y `npm run test:integration` contra una base
-   MongoDB aislada. Guarda los resultados que emita la terminal.
-3. En JMeter revisa el reporte HTML ya generado y, si necesitas repetirlo,
-   crea `performance/jmeter/users.local.csv` ignorado por Git con una cuenta
-   admin exclusiva de pruebas; sigue el README de JMeter.
-4. Sube la documentacion, planes y pruebas al repositorio. Confirma que el
-   workflow de GitHub Actions finalice correctamente y copia el enlace de esa
-   ejecucion.
-5. Graba un video de hasta 3 minutos mostrando la hoja SCRUM, Jira, documento
-   de rutas, ejecucion verde de Actions, resultados de pruebas, reporte JMeter
-   y enlace compartido de Postman. No muestres secretos en pantalla.
+1. Solicita permiso de editor sobre la hoja SCRUM, confirma 3 o 4 sprints con el
+   docente e importa/sincroniza el CSV con los datos reales del equipo.
+2. Desde la cuenta Postman del equipo, importa la coleccion y el ambiente,
+   comparte/publica la coleccion y pega el enlace real en esta lista. No
+   compartas credenciales ni tokens.
+3. Graba un video de hasta 3 minutos siguiendo [`guion-video.md`](./guion-video.md)
+   y mostrando la hoja SCRUM, Jira, documento de rutas, ejecucion verde de
+   Actions, resultados de pruebas, reporte JMeter y coleccion Postman publicada.
+   No muestres secretos en pantalla.
 
 ## Guion sugerido para el video (3 minutos)
 
