@@ -27,7 +27,7 @@ jobs:
       TEST_ADMIN_PASSWORD: cafeflow-ci-admin-only-password
     services:
       mongodb:
-        image: mongo:8.0
+        image: mongo:8.2.6
         ports:
           - 27017:27017
         env:
