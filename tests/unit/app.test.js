@@ -40,4 +40,46 @@ describe("middleware JSON de Express", () => {
       mensaje: "API de CaféFlow funcionando correctamente",
     });
   });
+
+  describe("CORS configurable", () => {
+    const corsOriginsBeforeTests = process.env.CORS_ORIGINS;
+
+    afterEach(() => {
+      if (corsOriginsBeforeTests === undefined) {
+        delete process.env.CORS_ORIGINS;
+      } else {
+        process.env.CORS_ORIGINS = corsOriginsBeforeTests;
+      }
+    });
+
+    test("permite el origen configurado y Authorization en preflight", async () => {
+      process.env.CORS_ORIGINS =
+        "http://localhost:5173, http://127.0.0.1:5173";
+
+      const response = await request(application)
+        .options("/api/pedidos")
+        .set("Origin", "http://localhost:5173")
+        .set("Access-Control-Request-Method", "POST")
+        .set("Access-Control-Request-Headers", "authorization,content-type")
+        .expect(204);
+
+      expect(response.headers["access-control-allow-origin"]).toBe(
+        "http://localhost:5173",
+      );
+      expect(response.headers["access-control-allow-headers"]).toBe(
+        "Authorization,Content-Type",
+      );
+    });
+
+    test("no habilita origenes que no estan en la lista", async () => {
+      process.env.CORS_ORIGINS = "http://localhost:5173";
+
+      const response = await request(application)
+        .get("/api/salud")
+        .set("Origin", "http://evil.example")
+        .expect(200);
+
+      expect(response.headers["access-control-allow-origin"]).toBeUndefined();
+    });
+  });
 });

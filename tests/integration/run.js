@@ -32,6 +32,8 @@ const jestResult = spawnSync(
     jestPath,
     "--runInBand",
     "tests/integration/top-down/salud.test.js",
+    "tests/integration/bottom-up/pedidos.test.js",
+    "tests/integration/api/catalogo-pedidos.test.js",
     "tests/integration/uri-safety.test.js",
     ...process.argv.slice(2),
   ],
