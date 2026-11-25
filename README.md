@@ -61,6 +61,8 @@ plantillas; no pongas secretos reales en esos ejemplos.
 - `src/services`: lógica de negocio.
 - `src/models`: modelos de datos.
 - Contrato completo de rutas: [`docs/rutas-api.md`](./docs/rutas-api.md).
+- Frontend React, configuracion local, datos de prueba y selectores Selenium:
+  [`frontend/README.md`](./frontend/README.md).
 - Checklist, enlaces de entrega y guion del video:
   [`docs/entrega-parcial.md`](./docs/entrega-parcial.md).
 - Backlog inicial importable en Google Sheets:
