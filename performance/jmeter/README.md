@@ -95,3 +95,28 @@ limpio, sin tokens, contrasenas, correos personales ni datos sensibles.
 | Escenario | Promedio | P95 | Throughput | Errores | Estado |
 |---|---:|---:|---:|---:|---|
 | JWT y 5 rutas privadas | 117.26 ms | 437.85 ms | 11.61 solicitudes/s | 0.00 % | Ejecutado localmente; 42 muestras; [reporte](../../docs/evidencias/jmeter-resumen.md) |
+
+## Perfil de estres local acotado
+
+Para un ensayo local del login usa `estres-login.jmx` y una base MongoDB
+desechable con una cuenta admin de pruebas. El perfil queda limitado a 3
+usuarios, 2 segundos de subida, 2 iteraciones y 15 segundos como limite:
+
+```powershell
+New-Item -ItemType Directory -Force performance/jmeter/results | Out-Null
+jmeter -n -t performance\jmeter\estres-login.jmx `
+  -Jprotocol=http -Jhost=127.0.0.1 -Jport=3000 `
+  -Jusers=3 -JrampUp=2 -Jloops=2 -Jduration=15 `
+  -JcredentialsFile=performance\jmeter\users.local.csv `
+  -l performance\jmeter\results\estres-login-local.jtl `
+  -e -o performance\jmeter\results\estres-login-local-html
+```
+
+El JTL y HTML se escriben solo dentro de `performance\jmeter\results\`, que
+esta ignorado por Git; el directorio de salida HTML debe no existir antes de
+ejecutar. En esta revision no se ejecuto el perfil: `jmeter` no
+esta disponible en `PATH` (`Get-Command jmeter` no encuentra un ejecutable).
+Java 8 esta instalado, pero no se obtuvo ninguna muestra; por tanto no hay
+metricas nuevas de muestras, errores, P95 ni throughput. El comando anterior
+es reproducible cuando JMeter 5.6.3 este instalado y la API local se ejecute
+contra la base desechable indicada. El reporte JWT existente no se reemplazo.

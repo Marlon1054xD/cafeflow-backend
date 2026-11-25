@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "d83ca123-94ba-4c5f-9f63-cafeflow-scrum17-19",
     "name": "CaféFlow API",
-    "description": "Pruebas contractuales de salud, autenticación y usuarios. Valida respuestas JSON, privacidad y tiempos; 2000 ms es un umbral inicial del proyecto, no un SLA.",
+    "description": "Pruebas contractuales de salud, autenticaci?n, usuarios, cat?logo y pedidos. Valida respuestas JSON, permisos y tiempos; 2000 ms es un umbral inicial del proyecto, no un SLA.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "event": [
@@ -35,14 +35,62 @@
     }
   ],
   "variable": [
-    { "key": "baseUrl", "value": "http://127.0.0.1:3000" },
-    { "key": "email", "value": "" },
-    { "key": "nombre", "value": "Postman API Test" },
-    { "key": "password", "value": "api-test-password" },
-    { "key": "invalidToken", "value": "invalid-token" },
-    { "key": "accessToken", "value": "" },
-    { "key": "userId", "value": "" },
-    { "key": "maxResponseTimeMs", "value": "2000" }
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:3000"
+    },
+    {
+      "key": "email",
+      "value": ""
+    },
+    {
+      "key": "nombre",
+      "value": "Postman API Test"
+    },
+    {
+      "key": "password",
+      "value": "api-test-password"
+    },
+    {
+      "key": "invalidToken",
+      "value": "invalid-token"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "maxResponseTimeMs",
+      "value": "2000"
+    },
+    {
+      "key": "beerId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "adminEmail",
+      "value": ""
+    },
+    {
+      "key": "adminPassword",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "adminUserId",
+      "value": ""
+    }
   ],
   "item": [
     {
@@ -112,7 +160,12 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"nombre\": \"{{nombre}}\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"rol\": \"admin\"\n}"
@@ -124,7 +177,12 @@
           "name": "Rechazar email duplicado",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"nombre\": \"{{nombre}}\",\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
@@ -152,7 +210,12 @@
           "name": "Rechazar datos de registro inválidos",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"nombre\": \"{{nombre}}\",\n  \"email\": \"correo-invalido\",\n  \"password\": \"corta\"\n}"
@@ -180,7 +243,12 @@
           "name": "Rechazar credenciales incorrectas",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"incorrect-password\"\n}"
@@ -208,7 +276,12 @@
           "name": "Iniciar sesión como cliente",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
@@ -271,7 +344,10 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{invalidToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{invalidToken}}"
+              }
             ],
             "url": "{{baseUrl}}/api/usuarios/me"
           },
@@ -297,7 +373,10 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
             ],
             "url": "{{baseUrl}}/api/usuarios/me"
           },
@@ -327,8 +406,14 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -359,7 +444,10 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
             ],
             "url": "{{baseUrl}}/api/usuarios"
           },
@@ -384,7 +472,12 @@
           "name": "Iniciar sesión como administrador",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
@@ -414,7 +507,12 @@
           "name": "Consultar estadísticas como administrador",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
             "url": "{{baseUrl}}/api/usuarios/estadisticas"
           },
           "event": [
@@ -436,7 +534,12 @@
           "name": "Listar usuarios como administrador",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
             "url": "{{baseUrl}}/api/usuarios"
           },
           "event": [
@@ -459,7 +562,12 @@
           "name": "Consultar usuario por id como administrador",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
             "url": "{{baseUrl}}/api/usuarios/{{adminUserId}}"
           },
           "event": [
@@ -473,6 +581,789 @@
                   "  const body = pm.response.json();",
                   "  pm.expect(body.user.id).to.eql(pm.environment.get('adminUserId'));",
                   "  pm.expect(body.user.rol).to.eql('admin');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cat?logo",
+      "item": [
+        {
+          "name": "Consultar cat?logo p?blico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cervezas"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('public catalog returns beers array', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().cervezas).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar creaci?n sin token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cervezas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nombre\":\"Lager Newman QA\",\"descripcion\":\"Producto automatizado\",\"precio\":8500,\"disponible\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('catalog write without JWT returns 401 JSON error', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "  pm.expect(pm.response.json()).to.have.all.keys('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar creaci?n a cliente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cervezas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nombre\":\"Lager Newman QA\",\"descripcion\":\"Producto automatizado\",\"precio\":8500,\"disponible\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('customer cannot write catalog and receives 403', function () {",
+                  "  pm.response.to.have.status(403);",
+                  "  pm.expect(pm.response.json()).to.have.all.keys('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear cerveza como administrador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cervezas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nombre\":\"Lager Newman QA\",\"descripcion\":\"Producto automatizado para flujo de pedidos.\",\"precio\":8500,\"disponible\":true}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('admin creates beer with COP price and availability', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  const beer = pm.response.json().cerveza;",
+                  "  pm.expect(beer).to.have.all.keys('id', 'nombre', 'descripcion', 'precio', 'disponible');",
+                  "  pm.expect(beer.precio).to.eql(8500);",
+                  "  pm.environment.set('beerId', beer.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar cerveza por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/cervezas/{{beerId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('public beer detail returns requested ID', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().cerveza.id).to.eql(pm.environment.get('beerId'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar cerveza como administrador",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cervezas/{{beerId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"precio\":9000}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('admin updates catalog price', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().cerveza.precio).to.eql(9000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pedidos",
+      "item": [
+        {
+          "name": "Rechazar pedido sin token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/pedidos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"items\":[]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('order without JWT responds with 401', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "  pm.expect(pm.response.json()).to.have.all.keys('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar pedido vac?o",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/pedidos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"items\":[]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('empty order responds with 400 JSON error', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "  pm.expect(pm.response.json()).to.have.all.keys('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear pedido desde el cat?logo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/pedidos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"items\":[{\"cervezaId\":\"{{beerId}}\",\"cantidad\":2}]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('customer order uses catalog price and server total', function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  const order = pm.response.json().pedido;",
+                  "  pm.expect(order).to.have.all.keys('id', 'usuario', 'items', 'total', 'estado', 'creadoEn');",
+                  "  pm.expect(order.total).to.eql(18000);",
+                  "  pm.expect(order.estado).to.eql('pendiente');",
+                  "  pm.expect(order.items[0].precioUnitario).to.eql(9000);",
+                  "  pm.environment.set('orderId', order.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cambiar precio despu?s de crear pedido",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"precio\":10000}"
+            },
+            "url": "{{baseUrl}}/api/cervezas/{{beerId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('later catalog price change does not rewrite existing order', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().cerveza.precio).to.eql(10000);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Marcar cerveza como no disponible",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/cervezas/{{beerId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"disponible\":false}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('admin can mark a catalog item unavailable', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().cerveza.disponible).to.eql(false);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar pedido de cerveza no disponible",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/pedidos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"items\":[{\"cervezaId\":\"{{beerId}}\",\"cantidad\":1}]}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('unavailable catalog item rejects order with 409', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "  pm.expect(pm.response.json()).to.have.all.keys('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar detalle propio",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/pedidos/{{orderId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('customer can consult own order detail', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().pedido.id).to.eql(pm.environment.get('orderId'));",
+                  "});",
+                  "  pm.expect(pm.response.json().pedido.items[0].precioUnitario).to.eql(9000);",
+                  "  pm.expect(pm.response.json().pedido.total).to.eql(18000);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar identificador inv?lido",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/pedidos/no-es-un-id"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('invalid order ID responds with 400', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "  pm.expect(pm.response.json()).to.have.all.keys('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar pedido inexistente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/pedidos/507f1f77bcf86cd799439011"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('missing order responds with 404', function () {",
+                  "  pm.response.to.have.status(404);",
+                  "  pm.expect(pm.response.json()).to.have.all.keys('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar pedidos propios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/pedidos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('customer sees own orders', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const orders = pm.response.json().pedidos;",
+                  "  pm.expect(orders).to.be.an('array');",
+                  "  pm.expect(orders.some(function (order) { return order.id === pm.environment.get('orderId'); })).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Denegar pendientes a cliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/pedidos/pendientes"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('customer cannot list all pending orders', function () {",
+                  "  pm.response.to.have.status(403);",
+                  "  pm.expect(pm.response.json()).to.have.all.keys('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar pendientes como administrador",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/pedidos/pendientes"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('admin lists pending orders oldest-first', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const orders = pm.response.json().pedidos;",
+                  "  pm.expect(orders).to.be.an('array');",
+                  "  pm.expect(orders.some(function (order) { return order.id === pm.environment.get('orderId'); })).to.eql(true);",
+                  "  pm.expect(orders.every(function (order) { return order.estado === 'pendiente'; })).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Denegar cambio de estado a cliente",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/pedidos/{{orderId}}/estado",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"estado\":\"en_preparacion\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('customer cannot update order state', function () {",
+                  "  pm.response.to.have.status(403);",
+                  "  pm.expect(pm.response.json()).to.have.all.keys('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar estado como administrador",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/pedidos/{{orderId}}/estado",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"estado\":\"en_preparacion\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('admin advances pending order to preparation', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().pedido.estado).to.eql('en_preparacion');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar transici?n inv?lida",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/pedidos/{{orderId}}/estado",
+            "body": {
+              "mode": "raw",
+              "raw": "{\"estado\":\"entregado\"}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('invalid state jump responds with 409', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "  pm.expect(pm.response.json()).to.have.all.keys('message');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar pedido a listo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"estado\":\"listo\"}"
+            },
+            "url": "{{baseUrl}}/api/pedidos/{{orderId}}/estado"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('admin advances preparation to ready', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().pedido.estado).to.eql('listo');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Entregar pedido",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"estado\":\"entregado\"}"
+            },
+            "url": "{{baseUrl}}/api/pedidos/{{orderId}}/estado"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('admin advances ready order to delivered', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().pedido.estado).to.eql('entregado');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rechazar cambio desde estado terminal",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"estado\":\"listo\"}"
+            },
+            "url": "{{baseUrl}}/api/pedidos/{{orderId}}/estado"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('delivered order cannot transition again', function () {",
+                  "  pm.response.to.have.status(409);",
+                  "  pm.expect(pm.response.json()).to.have.all.keys('message');",
                   "});"
                 ]
               }

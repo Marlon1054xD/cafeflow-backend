@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
-const mongoose = require("mongoose");
 const Usuario = require("../models/usuario.model");
+const { isValidObjectId } = require("../utils/object-id");
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const BCRYPT_ROUNDS = 12;
@@ -75,7 +75,7 @@ async function listarUsuarios() {
 }
 
 async function obtenerUsuarioPorId(id) {
-  if (!mongoose.isValidObjectId(id)) {
+  if (!isValidObjectId(id)) {
     throw createError(400, "El identificador de usuario no es válido.");
   }
 
