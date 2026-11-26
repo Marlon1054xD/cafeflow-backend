@@ -460,6 +460,81 @@ p {
   margin-bottom: 0;
 }
 
+.beer-order-button {
+  width: 100%;
+  margin-top: 16px;
+}
+
+.order-panel,
+.order-summary {
+  margin-top: 32px;
+  padding: 26px;
+  border: 1px solid #e5e5dc;
+  border-radius: 9px;
+  background: #fffefa;
+  box-shadow: 0 7px 24px rgb(44 58 42 / 4%);
+}
+
+.order-panel h2,
+.order-item h2 {
+  margin-bottom: 10px;
+  color: var(--ink);
+  font-family: Georgia, serif;
+  font-weight: 600;
+}
+
+.order-panel > p,
+.order-item p {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.order-form {
+  display: grid;
+  max-width: 360px;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.order-form input {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid #d9ded7;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+}
+
+.order-items {
+  display: grid;
+  gap: 18px;
+}
+
+.order-item {
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eeede6;
+}
+
+.order-item p {
+  margin-bottom: 8px;
+}
+
+.order-total,
+.order-status {
+  color: var(--green-dark);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.order-total {
+  margin-top: 22px;
+}
+
+.order-summary .button {
+  padding-inline: 16px;
+}
+
 .button-secondary {
   padding: 0 16px;
   border-color: #cbd7ca;

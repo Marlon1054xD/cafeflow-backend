@@ -67,3 +67,25 @@ export async function getCervezas() {
   }
   return data.cervezas
 }
+
+export async function crearPedido(cervezaId, cantidad, token) {
+  const data = await apiRequest('/api/pedidos', {
+    method: 'POST',
+    token,
+    body: { items: [{ cervezaId, cantidad }] },
+  })
+  if (!data?.pedido || typeof data.pedido.id !== 'string') {
+    throw new Error('La API devolvió un pedido con un formato inesperado.')
+  }
+  return data.pedido
+}
+
+export async function getPedido(id, token) {
+  const data = await apiRequest(`/api/pedidos/${encodeURIComponent(id)}`, {
+    token,
+  })
+  if (!data?.pedido || typeof data.pedido.id !== 'string') {
+    throw new Error('La API devolvió un pedido con un formato inesperado.')
+  }
+  return data.pedido
+}
