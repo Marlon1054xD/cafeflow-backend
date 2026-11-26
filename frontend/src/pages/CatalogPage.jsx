@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getCervezas } from '../api/client'
+import { ApiError, crearPedido, getCervezas } from '../api/client'
 import { useSession } from '../auth/useSession'
 
 const copFormatter = new Intl.NumberFormat('es-CO', {
@@ -16,7 +16,20 @@ function getCatalogError(error) {
   return error.message || 'No se pudo cargar el catálogo. Inténtalo otra vez.'
 }
 
-function BeerCard({ beer }) {
+function getOrderError(error) {
+  if (error instanceof TypeError) {
+    return 'No pudimos conectar con la API. Revisa la conexión e inténtalo otra vez.'
+  }
+  if (error instanceof ApiError && error.status === 404) {
+    return 'Esta cerveza ya no está disponible en el catálogo. Actualiza la página e inténtalo con otra.'
+  }
+  if (error instanceof ApiError && error.status === 409) {
+    return error.message || 'Esta cerveza dejó de estar disponible. Elige otra del catálogo.'
+  }
+  return error.message || 'No se pudo crear el pedido. Inténtalo otra vez.'
+}
+
+function BeerCard({ beer, onSelect }) {
   const id = beer.id ?? beer._id
 
   return (
@@ -40,6 +53,15 @@ function BeerCard({ beer }) {
         <span className="beer-price">{copFormatter.format(beer.precio)}</span>
         <span className="beer-id">ID: {id}</span>
       </div>
+      <button
+        className="button button-secondary beer-order-button"
+        data-testid="pedir-cerveza"
+        disabled={!beer.disponible}
+        onClick={() => onSelect(beer)}
+        type="button"
+      >
+        {beer.disponible ? 'Pedir esta cerveza' : 'No disponible'}
+      </button>
     </article>
   )
 }
@@ -51,6 +73,10 @@ export default function CatalogPage() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [attempt, setAttempt] = useState(0)
+  const [selectedBeer, setSelectedBeer] = useState(null)
+  const [cantidad, setCantidad] = useState('1')
+  const [orderError, setOrderError] = useState('')
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false)
 
   useEffect(() => {
     let isCurrent = true
@@ -77,6 +103,45 @@ export default function CatalogPage() {
   function handleLogout() {
     logout()
     navigate('/login', { replace: true })
+  }
+
+  function handleSelectBeer(beer) {
+    setSelectedBeer(beer)
+    setCantidad('1')
+    setOrderError('')
+  }
+
+  async function handleCreateOrder(event) {
+    event.preventDefault()
+    setOrderError('')
+
+    const quantity = Number(cantidad)
+    if (!Number.isSafeInteger(quantity) || quantity < 1) {
+      setOrderError('La cantidad debe ser un entero positivo.')
+      return
+    }
+
+    setIsSubmittingOrder(true)
+    try {
+      const pedido = await crearPedido(
+        selectedBeer.id ?? selectedBeer._id,
+        quantity,
+        session.token,
+      )
+      navigate(`/pedidos/${encodeURIComponent(pedido.id)}`)
+    } catch (requestError) {
+      if (requestError instanceof ApiError && requestError.status === 401) {
+        logout()
+        navigate('/login', {
+          replace: true,
+          state: { message: 'Tu sesión venció. Inicia sesión para continuar.' },
+        })
+        return
+      }
+      setOrderError(getOrderError(requestError))
+    } finally {
+      setIsSubmittingOrder(false)
+    }
   }
 
   return (
@@ -126,9 +191,54 @@ export default function CatalogPage() {
         ) : (
           <div className="beer-grid">
             {cervezas.map((beer) => (
-              <BeerCard key={beer.id ?? beer._id} beer={beer} />
+              <BeerCard
+                key={beer.id ?? beer._id}
+                beer={beer}
+                onSelect={handleSelectBeer}
+              />
             ))}
           </div>
+        )}
+
+        {selectedBeer && (
+          <section className="order-panel" aria-labelledby="order-title">
+            <h2 id="order-title">Pedir {selectedBeer.nombre}</h2>
+            <p>
+              Precio unitario: {copFormatter.format(selectedBeer.precio)}
+            </p>
+            <form
+              aria-busy={isSubmittingOrder}
+              className="order-form"
+              onSubmit={handleCreateOrder}
+            >
+              <div className="form-field">
+                <label htmlFor="pedido-cantidad">Cantidad</label>
+                <input
+                  id="pedido-cantidad"
+                  name="cantidad"
+                  min="1"
+                  onChange={(event) => setCantidad(event.target.value)}
+                  required
+                  step="1"
+                  type="number"
+                  value={cantidad}
+                />
+              </div>
+              {orderError && (
+                <p className="form-error" data-testid="pedido-error" role="alert">
+                  {orderError}
+                </p>
+              )}
+              <button
+                className="button button-primary"
+                disabled={isSubmittingOrder}
+                id="pedido-confirmar"
+                type="submit"
+              >
+                {isSubmittingOrder ? 'Enviando pedido…' : 'Confirmar pedido'}
+              </button>
+            </form>
+          </section>
         )}
       </section>
       <footer className="catalog-footer">CaféFlow · Buenos momentos, buena cerveza.</footer>

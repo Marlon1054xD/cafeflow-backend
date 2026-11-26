@@ -1,8 +1,7 @@
 # Frontend de CafeFlow
 
-Aplicacion React + Vite para iniciar sesion y consultar el catalogo del backend.
-La rama entrega `/login` y `/catalogo`; pedidos, Jest y Selenium POM quedan fuera
-de este alcance.
+Aplicacion React + Vite para iniciar sesion, consultar el catalogo y crear y
+consultar pedidos del backend. Jest y Selenium POM quedan fuera de este alcance.
 
 ## Requisitos
 
@@ -112,3 +111,14 @@ El catálogo es público y puede cargarse sin autenticar; el formulario usa
   - `[data-testid="cerveza-card"]` para cada producto; cada tarjeta tambien
     expone `data-cerveza-id="<id>"` y muestra su identificador.
 - `/catalogo` requiere sesion en memoria; al cerrar sesion se vuelve a `/login`.
+- Desde una cerveza disponible se puede seleccionar una cantidad entera positiva
+  y crear un pedido con `POST /api/pedidos`; el detalle se consulta en
+  `/pedidos/:id` con `GET /api/pedidos/:id`. El JWT se envía en ambas rutas y
+  permanece solo en memoria.
+- Selectores estables para el flujo de pedidos:
+  - `[data-testid="pedir-cerveza"]` para elegir una cerveza disponible
+  - `#pedido-cantidad` y `#pedido-confirmar` para confirmar la cantidad
+  - `[data-testid="pedido-detalle"]` para el contenedor del detalle
+  - `[data-testid="pedido-total"]` y `[data-testid="pedido-estado"]` para los
+    valores devueltos por la API
+  - `[data-testid="pedido-error"]` para errores de creación o consulta

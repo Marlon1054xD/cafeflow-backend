@@ -19,7 +19,7 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState(location.state?.message ?? '')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleSubmit(event) {
