@@ -1,7 +1,9 @@
 # Frontend de CafeFlow
 
 Aplicacion React + Vite para iniciar sesion, consultar el catalogo y crear y
-consultar pedidos del backend. Jest y Selenium POM quedan fuera de este alcance.
+consultar pedidos del backend. Las pruebas de componentes Jest cubren los flujos
+principales de autenticacion, catalogo y pedidos (ticket SCRUM-27); Selenium POM
+y la regresion general siguen fuera del alcance (SCRUM-28 y SCRUM-29).
 
 ## Requisitos
 
@@ -122,3 +124,62 @@ El catálogo es público y puede cargarse sin autenticar; el formulario usa
   - `[data-testid="pedido-total"]` y `[data-testid="pedido-estado"]` para los
     valores devueltos por la API
   - `[data-testid="pedido-error"]` para errores de creación o consulta
+
+## Pruebas de componentes React (SCRUM-27)
+
+Las pruebas validan comportamientos visibles de la aplicacion mediante Jest,
+`jest-environment-jsdom`, `babel-jest`, Babel, React Testing Library,
+`@testing-library/jest-dom` y `user-event`. `jsdom` renderiza React en un entorno
+de navegador simulado; Vite conserva su configuracion de compilacion. El contexto
+real de sesion, las rutas y los componentes no se simulan.
+
+### Instalacion y ejecucion
+
+Desde esta carpeta (`frontend/`), instala las dependencias con `npm ci` y
+ejecuta todas las pruebas con:
+
+```powershell
+npm test -- --runInBand
+```
+
+Tambien puedes ejecutar `npm test` para la ejecucion habitual de Jest.
+
+### Escenarios cubiertos
+
+1. Login con respuesta 401: se presenta el error de credenciales y la ruta
+   permanece en `/login`.
+2. Login exitoso: el proveedor real conserva el usuario/token en memoria y la
+   aplicacion navega a `/catalogo`.
+3. Catalogo vacio: se presenta el estado vacio devuelto por `getCervezas()`.
+4. Catalogo con productos: se muestran los nombres y los precios COP, y la
+   cerveza agotada no puede seleccionarse.
+5. Pedido confirmado: se envia el ID, la cantidad elegida y el JWT; se consulta
+   el detalle y se comprueba total de 17.000 COP y estado `pendiente`.
+6. Cantidad cero: la validacion nativa del campo numerico impide enviar el
+   pedido y no se llama a la funcion de creacion.
+
+Los casos se encuentran en `src/__tests__/App.test.jsx`. La configuracion Jest
+esta en `jest.config.cjs`, Babel transforma JSX en `babel.config.cjs` y
+`src/test/setup.js` inicializa `jest-dom`. Babel reemplaza en el contexto de
+pruebas `import.meta.env` de Vite por `process.env`; la compilacion normal sigue
+usando el tratamiento de Vite sin cambios.
+
+El mock se limita a `src/api/client.js`, frontera HTTP de la aplicacion. Sus
+funciones (`login`, `getCervezas`, `crearPedido` y `getPedido`) devuelven las
+estructuras reales que esperan los componentes y `ApiError` conserva `status`
+para reproducir el HTTP 401. No se conectan servicios externos y los casos no
+requieren backend, MongoDB, cuentas reales ni credenciales reales. Cada prueba
+inicia una sesion independiente y limpia los mocks y el almacenamiento web.
+
+### Resultados de verificacion
+
+Verificacion ejecutada desde `frontend/`:
+
+- `npm ci`: correcto; instalo 762 paquetes y audito 763. npm informo 19
+  vulnerabilidades en dependencias (1 baja y 18 moderadas).
+- `npm test -- --runInBand`: correcto; 1 suite y 6 pruebas pasaron, 0 fallaron.
+- `npm run lint`: correcto; Oxlint finalizo sin errores.
+- `npm run build`: correcto; Vite 8.3.8 genero `dist/` sin errores.
+- Comprobaciones de regresion temporales: las pruebas fallaron como se esperaba
+  al mutar el mensaje 401, la cantidad enviada y el total visualizado; las tres
+  modificaciones de produccion se revirtieron y la suite limpia paso de nuevo.
