@@ -124,7 +124,7 @@ Fecha: 2026-11-27. Entorno: Windows, Node.js 22.20.0, npm 10.9.3, Chrome
 | Jest frontend (`npm test -- --runInBand`) | PASÓ — 1 suite, 6 pruebas. |
 | Oxlint (`npm run lint`) | PASÓ — sin errores. |
 | Build frontend (`npm run build`) | PASÓ — Vite 8.3.8. |
-| Selenium (`npm run test:e2e`) | BLOQUEADA en preflight: `API_BASE_URL` no responde en `http://localhost:3000/api/salud`. Los escenarios UI no se ejecutaron y no se generó captura de un caso; el runner termina antes de abrir Chrome. La comprobación aislada de Chrome WebDriver headless sí pasó. |
+| Selenium (`npm run test:e2e`) | BLOQUEADA en preflight: `API_BASE_URL` no responde en `http://localhost:3000/api/salud`. Los escenarios UI no se ejecutaron y no se generó captura de un caso; el runner termina antes de abrir Chrome. La salida sanitizada quedó en [evidencia local](../reports/e2e/preflight-failure.txt). La comprobación aislada de Chrome WebDriver headless sí pasó. |
 
 Commit funcional probado: `05c80468148382f1185841d86a036b2910084c6a`
 (SCRUM-28/29). Defectos funcionales: no determinables sin MongoDB y los
