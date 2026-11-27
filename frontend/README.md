@@ -1,9 +1,9 @@
 # Frontend de CafeFlow
 
 Aplicacion React + Vite para iniciar sesion, consultar el catalogo y crear y
-consultar pedidos del backend. Las pruebas de componentes Jest cubren los flujos
-principales de autenticacion, catalogo y pedidos (ticket SCRUM-27); Selenium POM
-y la regresion general siguen fuera del alcance (SCRUM-28 y SCRUM-29).
+consultar pedidos del backend. Jest cubre los componentes React (SCRUM-27) y
+Selenium WebDriver con Page Object Model cubre los flujos visibles de login,
+catalogo y detalle de pedidos (SCRUM-28 y SCRUM-29).
 
 ## Requisitos
 
@@ -183,3 +183,35 @@ Verificacion ejecutada desde `frontend/`:
 - Comprobaciones de regresion temporales: las pruebas fallaron como se esperaba
   al mutar el mensaje 401, la cantidad enviada y el total visualizado; las tres
   modificaciones de produccion se revirtieron y la suite limpia paso de nuevo.
+
+## Regresión de navegador con Selenium (SCRUM-28 y SCRUM-29)
+
+La suite de navegador está en `tests/e2e/` y usa Selenium WebDriver para
+JavaScript y Chrome. Los Page Objects centralizan selectores, esperas y acciones;
+las aserciones están en los casos `*.e2e.test.js`. Requiere el backend de prueba,
+Vite, MongoDB desechable y Chrome/Chromium. Por defecto Chrome se ejecuta en modo
+headless.
+
+Con ambos servicios activos, ejecuta desde la raíz del repositorio:
+
+```powershell
+$env:NODE_ENV = 'test'
+$env:API_BASE_URL = 'http://localhost:3000'
+$env:FRONTEND_BASE_URL = 'http://localhost:5173'
+npm run test:e2e
+```
+
+El runner comprueba la salud de la API, Vite y el preflight CORS; valida que
+`MONGODB_URI_TEST` sea una base aislada; crea un cliente y una Lager disponible
+a 8.500 COP con IDs únicos; ejecuta los flujos por el navegador y elimina
+únicamente los pedidos de esa cuenta, la cerveza y la cuenta creadas en esa
+ejecución. Si un caso falla, la captura queda en `reports/e2e/` y no se registran
+credenciales. Para abrir Chrome en modo visible:
+
+```powershell
+$env:E2E_HEADLESS = 'false'
+npm run test:e2e
+```
+
+La preparación completa de servicios, variables y suites está en
+[`docs/regresion-scrum-28-29.md`](../docs/regresion-scrum-28-29.md).
