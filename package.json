@@ -9,7 +9,8 @@
     "test:unit": "jest --runInBand tests/unit --coverage --coverageDirectory=coverage/unit",
     "test:integration": "node tests/integration/run.js",
     "test:api": "node scripts/run-api-tests.js",
-    "seed:test-admin": "node scripts/seed-test-admin.js"
+    "seed:test-admin": "node scripts/seed-test-admin.js",
+    "test:e2e": "node tests/e2e/run.js"
   },
   "repository": {
     "type": "git",
@@ -36,6 +37,7 @@
   "devDependencies": {
     "jest": "^30.5.2",
     "newman": "^6.2.3",
+    "selenium-webdriver": "^4.35.0",
     "supertest": "^7.3.1"
   },
   "jest": {
