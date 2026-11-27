@@ -126,9 +126,9 @@ Fecha: 2026-11-27. Entorno: Windows, Node.js 22.20.0, npm 10.9.3, Chrome
 | Build frontend (`npm run build`) | PASÓ — Vite 8.3.8. |
 | Selenium (`npm run test:e2e`) | BLOQUEADA en preflight: `API_BASE_URL` no responde en `http://localhost:3000/api/salud`. Los escenarios UI no se ejecutaron y no se generó captura de un caso; el runner termina antes de abrir Chrome. La comprobación aislada de Chrome WebDriver headless sí pasó. |
 
-Commit funcional probado: se completa con el SHA del commit de implementación
-SCRUM-28/29 inmediatamente después de crearlo. Defectos funcionales: no
-determinables sin MongoDB y los servicios activos. Bloqueos reproducibles:
+Commit funcional probado: `05c80468148382f1185841d86a036b2910084c6a`
+(SCRUM-28/29). Defectos funcionales: no determinables sin MongoDB y los
+servicios activos. Bloqueos reproducibles:
 iniciar MongoDB, configurar `.env.test`, arrancar la API y Vite con las variables
 de esta guía, y repetir integración, Newman y `npm run test:e2e`. El fallo de
 Selenium fue de precondiciones del entorno, no de un caso de navegador; por ello
